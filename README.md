@@ -7,18 +7,14 @@ YACPPM (Yet Another C++ Manager) is a simple c++ project manager
 Inspired by [Cabin](https://github.com/cabinpkg/cabin) and Cargo.
 
 ## Why
-I'm making it mainly to experiment with managing build setup and to simplify the build process for some of my projects hopefully ^^
+I'm making it mainly to experiment with managing build setup and also to simplify the build process for my projects hopefully ^^
 
 ## Current goals
-- self host YACPPM
+- Self-host YACPPM
 - project template system
 - build Release/Debug options
+- Cross-compilation support
 
-## Current goals
-- self host YACPPM
-- project template system
-- build Release/Debug options
-- cross building cross building
 ## Current commands
 - yacppm new <project_name> (currently only executables)
 - yacppm add -h <git_repo> <version> (header_only)
@@ -27,6 +23,15 @@ I'm making it mainly to experiment with managing build setup and to simplify the
 - yacppm build (currently only support local builds)
 - yacppm run
 - yacppm remove <git_repo or name> (not implemented yet)
+
+### Example
+```bash
+yacppm new my_project
+cd my_project
+yacppm add -h https://github.com/user/header_only_repo v1.0.0
+yacppm add -c https://github.com/user/cmake_repo (will default to master branch)
+yacppm build or yacppm run
+```
 
 ## How it currently works
 YACPPM store "packages" in a yacppm.toml file with version
@@ -43,3 +48,10 @@ YACPPM store "packages" in a yacppm.toml file with version
 - on run:
     - build the project
     - and then runs the project
+
+## Third-Party
+This project uses the following third-party libraries:
+
+- [**libgit2**](https://github.com/libgit2/libgit2): Copyright (C) the libgit2 contributors
+
+- [**toml++**](https://github.com/marzer/tomlplusplus): Copyright (c) Mark Gillard
