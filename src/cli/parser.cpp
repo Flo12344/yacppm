@@ -13,7 +13,11 @@ void yacppm::parse_cli_args(int argc, char *argv[]) {
       run();
     }
     if (arg == "build") {
-      build();
+      if (argc > 2) {
+        build(argv[i + 1], argc == 4 ? argv[i + 2] : "");
+      } else {
+        build();
+      }
     }
     if (arg == "remove") {
       if (argc != 3) {

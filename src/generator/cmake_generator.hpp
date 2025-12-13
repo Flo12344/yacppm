@@ -1,5 +1,7 @@
 #pragma once
 
+#include "generator/toolchain_generator.hpp"
+#include "logger.hpp"
 #include "manifest.hpp"
 #include "utils/command_helper.hpp"
 #include "utils/isl_getter.hpp"
@@ -19,6 +21,8 @@ public:
     cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
     cmake_file << "project(" << m.package.name << " LANGUAGES C CXX)\n";
     cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
+    cmake_file << "if(DEFINED CMAKE_TOOLCHAIN_FILE)\n";
+    cmake_file << " include(${CMAKE_TOOLCHAIN_FILE})\n endif()\n";
     cmake_file << "set(INCLUDES\n";
     cmake_file << "src/\n";
     for (const auto &inc : isl.libs_include_paths) {
@@ -49,6 +53,21 @@ public:
 
   static void build() {
     std::string cmd = "cmake -S . -B build 2>&1";
+    run_command(cmd);
+
+    cmd = "cmake --build build 2>&1";
+    run_command(cmd);
+  }
+  static void build_toolchain(std::string target, std::string arch = "x86_64") {
+    if (target == "windows") {
+      gen_windows_toolchain(arch);
+    } else {
+      Loggger::err("Unsupported target");
+      return;
+    }
+
+    std::string cmd =
+        "cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake 2>&1";
     run_command(cmd);
 
     cmd = "cmake --build build 2>&1";
