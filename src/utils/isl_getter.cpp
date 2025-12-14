@@ -1,6 +1,7 @@
 #include "isl_getter.hpp"
 #include "command_helper.hpp"
 #include "git_utils.hpp"
+#include "manifest.hpp"
 #include <filesystem>
 
 using namespace yacppm;
@@ -173,6 +174,9 @@ void yacppm::ISL_Getter::get_project_isl(const Manifest &m) {
   int count = 0;
   git_libgit2_init();
   for (auto &dep : m.dependencies) {
+    if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB)
+      continue;
+
     auto rep = git::get_user_repo(dep.second.git);
     lib_get_bar->set_label(rep->first + "/" + rep->second);
     if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" +
@@ -205,6 +209,10 @@ void yacppm::ISL_Getter::get_project_isl(const Manifest &m) {
 
   count = 0;
   for (auto &dep : m.dependencies) {
+    if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
+      local_libs.push_back({dep.first, dep.second.version});
+      continue;
+    }
     auto rep = git::get_user_repo(dep.second.git);
     lib_build_bar->set_label(rep->first + "/" + rep->second);
     std::string git_file_path =
@@ -229,6 +237,7 @@ void yacppm::ISL_Getter::get_project_isl(const Manifest &m) {
     } break;
     case HEADER:
       process_header(git_file_path, lib_file_path, already_built);
+    case LLIB:
 
     case PKG_TYPE_MAX:
       break;

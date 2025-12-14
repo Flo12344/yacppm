@@ -27,6 +27,11 @@ struct Manifest {
                const std::string &type,
                std::unordered_map<std::string, std::string> settings = {}) {
 
+    if (type == "llib") {
+      dependencies.insert_or_assign(repo,
+                                    Dependency{version, type, "", settings});
+      return;
+    }
     std::string checked = git::get_git_link(repo);
     auto repo_info = git::get_user_repo(checked);
     if (!repo_info) {
@@ -40,12 +45,14 @@ struct Manifest {
   }
 };
 
-enum PkgType { HEADER, CMAKE, PKG_TYPE_MAX };
+enum PkgType { HEADER, CMAKE, LLIB, PKG_TYPE_MAX };
 inline PkgType pkg_type(std::string type) {
   if (type == "header")
     return HEADER;
   if (type == "cmake")
     return CMAKE;
+  if (type == "llib")
+    return LLIB;
   return PKG_TYPE_MAX;
 }
 

@@ -12,6 +12,7 @@
 #include <git2/tag.h>
 #include <git2/types.h>
 #include <string>
+#include <utility>
 #include <vector>
 namespace yacppm {
 class ISL_Getter {
@@ -36,5 +37,6 @@ public:
   std::vector<std::string> libs_names;
   std::vector<std::string> libs_include_paths;
   std::vector<std::string> sources;
+  std::vector<std::pair<std::string, std::string>> local_libs;
 };
 } // namespace yacppm

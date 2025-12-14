@@ -34,6 +34,13 @@ public:
       cmake_file << src << "\n";
     }
     cmake_file << ")\n";
+
+    for (const auto &llib : isl.local_libs) {
+      cmake_file << "find_package(" << llib.first
+                 << (llib.second.empty() ? "" : " " + llib.second)
+                 << " REQUIRED)\n";
+    }
+
     cmake_file << "set(LIBRARIES\n";
     for (const auto &lib : isl.libs_names) {
       cmake_file << lib << "\n";
@@ -44,7 +51,11 @@ public:
     for (const auto &lib : isl.libs_paths) {
       cmake_file << lib << "\n";
     }
+    for (const auto &llib : isl.local_libs) {
+      cmake_file << llib.first << "\n";
+    }
     cmake_file << ")\n";
+
     cmake_file << "add_executable(${PROJECT_NAME} ${SOURCES})\n";
     cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";
 

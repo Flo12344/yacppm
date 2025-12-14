@@ -41,6 +41,8 @@ void yacppm::parse_cli_args(int argc, char *argv[]) {
         add_header_only(argv[i + 2], argc == 5 ? argv[i + 3] : "");
       } else if (std::string(argv[i + 1]) == "-c") {
         add_cmake(argv[i + 2], argc == 5 ? argv[i + 3] : "");
+      } else if (std::string(argv[i + 1]) == "-llib") {
+        add_local_lib(argv[i + 2], argc == 5 ? argv[i + 3] : "");
       }
     }
   }
