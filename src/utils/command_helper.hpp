@@ -2,6 +2,7 @@
 #include "logger.hpp"
 #include <array>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #ifdef _WIN32
@@ -20,8 +21,7 @@ inline void run_command(std::string command) {
   std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(command.c_str(), "r"),
                                                 PCLOSE);
   if (!pipe) {
-    Loggger::err("popen failed!");
-    return;
+    throw std::runtime_error("popen failed!");
   }
 
   // TODO: Parse cmake outputs

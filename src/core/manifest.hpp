@@ -1,8 +1,10 @@
 #pragma once
 #include "../utils/link_utils.hpp"
 #include "../utils/logger.hpp"
+#include "fmt/color.h"
 #include "toml.hpp"
 #include <fstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 namespace yacppm {
@@ -36,8 +38,7 @@ struct Manifest {
     std::string checked = git::get_git_link(repo);
     auto repo_info = git::get_user_repo(checked);
     if (!repo_info) {
-      Loggger::err("failed to add: {}", repo);
-      return;
+      throw std::runtime_error(fmt::format("failed to add: {}", repo));
     }
     Loggger::info("Added to project: {} -> {}", repo, checked);
 

@@ -8,6 +8,7 @@
 #include <fmt/base.h>
 #include <fstream>
 #include <ios>
+#include <stdexcept>
 #include <string>
 
 namespace yacppm {
@@ -77,8 +78,7 @@ public:
     if (target == "windows") {
       gen_windows_toolchain(arch);
     } else {
-      Loggger::err("Unsupported target");
-      return;
+      throw std::invalid_argument("Unsupported target");
     }
 
     std::string cmd =

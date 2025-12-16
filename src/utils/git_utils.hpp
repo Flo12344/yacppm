@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <git2/branch.h>
 #include <git2/checkout.h>
 #include <git2/commit.h>
@@ -14,6 +15,15 @@
 #include <string>
 namespace yacppm {
 namespace git {
+
+class GitError : public std::exception {
+private:
+  std::string msg;
+
+public:
+  GitError(const std::string &msg) : msg(msg) {};
+  const char *what() const noexcept override { return msg.c_str(); }
+};
 
 struct Ref {
   git_reference *ptr = nullptr;

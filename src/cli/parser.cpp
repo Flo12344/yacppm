@@ -6,6 +6,7 @@
 #include "commands/run.hpp"
 #include <algorithm>
 #include <optional>
+#include <stdexcept>
 #include <string>
 
 void yacppm::parse_cli_args(int argc, char *argv[]) {
@@ -29,14 +30,6 @@ void yacppm::parse_cli_args(int argc, char *argv[]) {
   check_command(command);
 }
 
-#define is_arg_present(value, error)                                           \
-  {                                                                            \
-    if (!value.has_value()) {                                                  \
-      Loggger::err(error);                                                     \
-      return;                                                                  \
-    }                                                                          \
-  }
-
 void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
   std::reverse(args.begin(), args.end());
 
@@ -53,7 +46,9 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
   };
 
   auto current = consume();
-  is_arg_present(current, "Missing command");
+  if (!current.has_value())
+    throw std::invalid_argument("Missing command");
+
   CLI_Argument current_value = current.value();
   if (current_value.name == "run") {
     run();
@@ -63,14 +58,14 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
     current = consume();
     if (current.has_value()) {
       if (!is_positional(current.value())) {
-        Loggger::err("Target strats with a '-' or contains a '='");
-        return;
+        throw std::invalid_argument(
+            "Target strats with a '-' or contains a '='");
       }
       current = consume();
       if (current.has_value()) {
         if (!is_positional(current.value())) {
-          Loggger::err("Architecture strats with a '-' or contains a '='");
-          return;
+          throw std::invalid_argument(
+              "Architecture strats with a '-' or contains a '='");
         }
         CLI_Argument previous = current_value;
         current_value = current.value();
@@ -86,12 +81,13 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
   }
   if (current_value.name == "add") {
     current = consume();
-    is_arg_present(current, "Missing type after add");
+
+    if (!current.has_value())
+      throw std::invalid_argument("Missing type after add");
     current_value = current.value();
     std::string type = current_value.name;
     if (args.size() < 1) {
-      Loggger::err("Missing repo link");
-      return;
+      throw std::invalid_argument("Missing repo link");
     }
 
     current = consume();
@@ -120,7 +116,9 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
   }
   if (current_value.name == "new") {
     current = consume();
-    is_arg_present(current, "Missing project name");
+
+    if (!current.has_value())
+      throw std::invalid_argument("Missing project name");
     current_value = current.value();
 
     std::string name = current_value.name;
@@ -144,6 +142,5 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
     return;
   }
 
-  Loggger::err("Unknown command");
-  return;
+  throw std::invalid_argument("Unknown command");
 }

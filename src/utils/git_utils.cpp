@@ -3,7 +3,7 @@
 
 void yacppm::git::git_print_error(const std::string &msg) {
   const git_error *e = git_error_last();
-  Loggger::err(msg + (e ? (": " + std::string(e->message)) : ""));
+  throw GitError(msg + (e ? (": " + std::string(e->message)) : ""));
 }
 std::optional<git_oid>
 yacppm::git::resolve_to_commit_oid(git_repository *repo,

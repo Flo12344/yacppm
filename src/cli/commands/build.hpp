@@ -1,13 +1,12 @@
 #pragma once
 #include "generator/cmake_generator.hpp"
-#include "logger.hpp"
+#include <stdexcept>
 #include <string>
 namespace yacppm {
 inline void build(std::string target = "", std::string arch = "") {
   std::fstream yacppm_file("yacppm.toml", std::ios::in);
   if (yacppm_file.fail()) {
-    Loggger::err("Failed, not in a yacppm Project");
-    return;
+    throw std::runtime_error("Failed, not in a yacppm Project");
   }
   yacppm_file.close();
   Manifest m = parse_manifest(toml::parse_file("yacppm.toml"));
