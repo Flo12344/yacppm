@@ -17,8 +17,11 @@ inline void create(std::string name = "new_project",
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive |
       std::filesystem::copy_options::overwrite_existing;
+  if (!std::filesystem::exists("templates/" + _template)) {
+    Loggger::err("Unknown template : {}", _template);
+    return;
+  }
   std::filesystem::copy("templates/" + _template, name, opt);
-  Loggger::info("{}", __LINE__);
   if (std::filesystem::exists(name + "/template.deps")) {
     std::ifstream file(name + "/template.deps");
     std::string line;
