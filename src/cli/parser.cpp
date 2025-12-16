@@ -124,7 +124,18 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
     current_value = current.value();
 
     std::string name = current_value.name;
-    create(name);
+    std::string _template = "default";
+
+    current = consume();
+    if (current.has_value()) {
+      current_value = current.value();
+      if (current_value.is_dash && current_value.name == "template" &&
+          !current_value.value.empty()) {
+        _template = current_value.value;
+      }
+    }
+
+    create(name, _template);
     return;
   }
 
