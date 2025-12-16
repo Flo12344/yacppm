@@ -16,7 +16,7 @@ I'm making it mainly to experiment with managing build setup and also to simplif
 - Cross-compilation support
 
 ## Current commands
-- yacppm new <project_name> (currently only executables)
+- yacppm new <project_name> -template=<template_name> (currently only executables)
 - yacppm add -h <git_repo> <version> (header_only)
 - yacppm add -c <git_repo> <version> (cmake projects)
 - yacppm add <git_repo> <version> (not implemented yet but would try to get the type based on files)
