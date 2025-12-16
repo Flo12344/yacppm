@@ -55,8 +55,12 @@ public:
       cmake_file << llib.first << "\n";
     }
     cmake_file << ")\n";
-
-    cmake_file << "add_executable(${PROJECT_NAME} ${SOURCES})\n";
+    if (m.package.type == "exec")
+      cmake_file << "add_executable(${PROJECT_NAME} ${SOURCES})\n";
+    else if (m.package.type == "static")
+      cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
+    else if (m.package.type == "shared")
+      cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
     cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";
 
     cmake_file.close();

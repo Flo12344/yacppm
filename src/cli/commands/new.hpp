@@ -8,10 +8,10 @@
 #include <fstream>
 #include <string>
 namespace yacppm {
-inline void create(std::string name = "new_project",
-                   std::string _template = "default") {
+inline void create(std::string name, std::string _template, std::string type) {
   std::filesystem::create_directory(name);
   Manifest m = create_manifest(name);
+  m.set_type(type);
   save_manifest(m, name + "/yacppm.toml");
 
   std::filesystem::copy_options opt =

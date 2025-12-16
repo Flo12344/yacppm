@@ -125,17 +125,22 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
 
     std::string name = current_value.name;
     std::string _template = "default";
+    std::string _type = "exec";
 
-    current = consume();
-    if (current.has_value()) {
-      current_value = current.value();
-      if (current_value.is_dash && current_value.name == "template" &&
-          !current_value.value.empty()) {
-        _template = current_value.value;
+    while (args.size() > 0) {
+      current = consume();
+      if (current.has_value()) {
+        current_value = current.value();
+        if (current_value.is_dash && !current_value.value.empty()) {
+          if (current_value.name == "template")
+            _template = current_value.value;
+          if (current_value.name == "type")
+            _type = current_value.value;
+        }
       }
     }
 
-    create(name, _template);
+    create(name, _template, _type);
     return;
   }
 

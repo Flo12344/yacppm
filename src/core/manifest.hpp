@@ -17,6 +17,7 @@ struct Dependency {
 struct Package {
   std::string name;
   std::string version;
+  std::string type;
 };
 
 struct Manifest {
@@ -42,6 +43,11 @@ struct Manifest {
 
     dependencies.insert_or_assign(repo_info->second,
                                   Dependency{version, type, checked, settings});
+  }
+
+  void set_type(const std::string &type) {
+    if (type == "exec" || type == "static" || type == "shared")
+      package.type = type;
   }
 };
 
@@ -69,6 +75,7 @@ inline Manifest parse_manifest(const toml::table &tbl) {
   if (auto *pkg = tbl["package"].as_table()) {
     m.package.name = pkg->at("name").value_or("");
     m.package.version = pkg->at("version").value_or("");
+    m.package.type = pkg->at("type").value_or("exec");
   }
 
   if (auto *deps = tbl["dependencies"].as_table()) {
@@ -76,7 +83,7 @@ inline Manifest parse_manifest(const toml::table &tbl) {
       Dependency dep;
 
       if (auto *d = val.as_table()) {
-        dep.version = d->at("version").value_or("");
+        dep.version = d->at("version").value_or("latest");
 
         if (auto *type = d->at("type").as_string()) {
           dep.type = type->value_or("");
@@ -101,7 +108,8 @@ inline toml::table to_toml(const Manifest &m) {
   toml::table root;
 
   root.insert("package", toml::table{{"name", m.package.name},
-                                     {"version", m.package.version}});
+                                     {"version", m.package.version},
+                                     {"type", m.package.type}});
 
   toml::table deps;
 
