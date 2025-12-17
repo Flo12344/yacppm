@@ -14,13 +14,14 @@ inline void create(std::string name, std::string _template, std::string type) {
   m.set_type(type);
   save_manifest(m, name + "/yacppm.toml");
 
-  std::filesystem::copy_options opt =
-      std::filesystem::copy_options::recursive |
-      std::filesystem::copy_options::overwrite_existing;
   if (!std::filesystem::exists("templates/" + _template)) {
     Loggger::err("Unknown template : {}", _template);
     return;
   }
+  std::filesystem::copy_options opt =
+      std::filesystem::copy_options::recursive |
+      std::filesystem::copy_options::overwrite_existing;
+
   std::filesystem::copy("templates/" + _template, name, opt);
   if (std::filesystem::exists(name + "/template.deps")) {
     std::ifstream file(name + "/template.deps");
