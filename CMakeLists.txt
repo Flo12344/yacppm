@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11.0)
-project(cpp-manager)
+project(yacppm)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
@@ -10,7 +10,7 @@ set(SOURCE_FILES
     src/cli/parser.cpp
     )
 
-include_directories(cpp-manager PRIVATE
+include_directories(yacppm PRIVATE
     external/
     src/
     src/utils
@@ -33,6 +33,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(cpp-manager ${SOURCE_FILES})
+add_executable(yacppm ${SOURCE_FILES})
 
-target_link_libraries(cpp-manager PRIVATE git2 fmt)
+target_link_libraries(yacppm PRIVATE git2 fmt)
