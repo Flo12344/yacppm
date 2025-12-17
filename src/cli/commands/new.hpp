@@ -29,6 +29,12 @@ inline void create(std::string name, std::string _template, std::string type) {
       if (line.empty()) {
         continue;
       }
+      if (line.starts_with("type")) {
+        m.set_type(line.substr(line.find_first_of(" ") + 1));
+        save_manifest(m, name + "/yacppm.toml");
+        continue;
+      }
+
       std::string type = line.substr(0, line.find_first_of(" "));
       line = line.substr(line.find_first_of(" ") + 1);
       std::string git = line.substr(0, line.find_first_of(" "));
