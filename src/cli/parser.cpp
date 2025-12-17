@@ -4,13 +4,11 @@
 #include "commands/build.hpp"
 #include "commands/new.hpp"
 #include "commands/run.hpp"
-#include <algorithm>
 #include <optional>
 #include <stdexcept>
 #include <string>
 
-void yacppm::parse_cli_args(int argc, char *argv[]) {
-  std::vector<CLI_Argument> command;
+void yacppm::Parser::parse_cli_args(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     std::string name = argv[i];
     std::string option;
@@ -24,81 +22,42 @@ void yacppm::parse_cli_args(int argc, char *argv[]) {
       name = name.substr(1);
       dashed = true;
     }
-    command.push_back({name, option, dashed});
+    args.push_back({name, option, dashed});
   }
 
-  check_command(command);
+  check_command();
 }
-
-void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
-  std::reverse(args.begin(), args.end());
-
-  auto consume = [&]() -> std::optional<CLI_Argument> {
-    if (args.empty())
-      return std::nullopt;
-    auto arg = args.back();
-    args.pop_back();
-    return arg;
-  };
-
-  auto is_positional = [](CLI_Argument arg) -> bool {
-    return !arg.is_dash && arg.value.empty();
-  };
-
-  auto current = consume();
-  if (!current.has_value())
+void yacppm::Parser::check_command() {
+  if (args.size() == 0)
     throw std::invalid_argument("Missing command");
 
-  CLI_Argument current_value = current.value();
-  if (current_value.name == "run") {
+  if (check(false, "run")) {
     run();
     return;
   }
-  if (current_value.name == "build") {
-    current = consume();
-    if (current.has_value()) {
-      if (!is_positional(current.value())) {
-        throw std::invalid_argument(
-            "Target strats with a '-' or contains a '='");
-      }
-      current = consume();
-      if (current.has_value()) {
-        if (!is_positional(current.value())) {
-          throw std::invalid_argument(
-              "Architecture strats with a '-' or contains a '='");
-        }
-        CLI_Argument previous = current_value;
-        current_value = current.value();
-
-        build(previous.name, current_value.name);
+  if (check(false, "build")) {
+    consume();
+    if (check(true, "target")) {
+      std::string target = consume()->value;
+      if (check(true, "arch")) {
+        std::string arch = consume()->value;
+        build(target, arch);
       } else {
-        build(current_value.name);
+        build(target);
       }
     } else {
       build();
     }
     return;
   }
-  if (current_value.name == "add") {
-    current = consume();
+  if (check(false, "add")) {
+    consume();
 
-    if (!current.has_value())
-      throw std::invalid_argument("Missing type after add");
-    current_value = current.value();
-    std::string type = current_value.name;
-    if (args.size() < 1) {
-      throw std::invalid_argument("Missing repo link");
-    }
-
-    current = consume();
-    current_value = current.value();
-    std::string repo = current_value.name;
-
+    std::string type = expect(true, "", "Repo type").name;
+    std::string repo = expect(false, "", "Repo link").name;
     std::string version = "latest";
-    if (args.size() > 0) {
-      current = consume();
-      current_value = current.value();
-      version = current_value.name;
+    if (check(false)) {
+      version = consume()->name;
     }
 
     if (type == "c") {
@@ -110,32 +69,24 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
     }
     return;
   }
-  if (current_value.name == "remove") {
-    Loggger::info(current_value.name + "\n");
+  if (check(false, "remove")) {
+    Loggger::info(consume()->name + "\n");
     return;
   }
-  if (current_value.name == "new") {
-    current = consume();
 
-    if (!current.has_value())
-      throw std::invalid_argument("Missing project name");
-    current_value = current.value();
+  if (check(false, "new")) {
+    consume();
 
-    std::string name = current_value.name;
+    std::string name = expect(false, "", "Project name").name;
     std::string _template = "default";
     std::string _type = "exec";
 
-    while (args.size() > 0) {
-      current = consume();
-      if (current.has_value()) {
-        current_value = current.value();
-        if (current_value.is_dash && !current_value.value.empty()) {
-          if (current_value.name == "template")
-            _template = current_value.value;
-          if (current_value.name == "type")
-            _type = current_value.value;
-        }
-      }
+    while (check(true)) {
+      if (check(true, "template"))
+        _template = args[pos].value;
+      if (check(true, "type"))
+        _type = args[pos].value;
+      consume();
     }
 
     create(name, _template, _type);
@@ -143,4 +94,60 @@ void yacppm::check_command(std::vector<yacppm::CLI_Argument> args) {
   }
 
   throw std::invalid_argument("Unknown command");
+}
+std::optional<yacppm::CLI_Argument> yacppm::Parser::consume() {
+  if (args.size() > pos) {
+    int cur = pos;
+    pos++;
+    return args[cur];
+  }
+  return std::nullopt;
+}
+bool yacppm::Parser::check(bool dash, std::string name, int offset) {
+  if (pos + offset >= args.size()) {
+    return false;
+  }
+  CLI_Argument next = args[pos + offset];
+  if (next.is_dash != dash) {
+    return false;
+  }
+
+  if (name.empty())
+    return true;
+
+  if (name != next.name)
+    return false;
+  else
+    return true;
+}
+std::optional<yacppm::CLI_Argument> yacppm::Parser::next(int offset) {
+  if (args.size() > pos + 1 + offset) {
+    pos++;
+    return args[pos + offset];
+  }
+  return std::nullopt;
+};
+yacppm::CLI_Argument yacppm::Parser::expect(bool dash, const std::string &name,
+                                            const std::string &type) {
+  auto c = consume();
+  if (!c.has_value())
+    throw std::invalid_argument(
+        fmt::format("{} missing after {}", type, args[pos].name));
+
+  CLI_Argument next = c.value();
+  if (next.is_dash == dash) {
+    if (name.empty())
+      return next;
+    if (name != next.name)
+      throw std::invalid_argument(
+          fmt::format("Wrong argumment name {} expected {}", next.name, name));
+    else
+      return next;
+  }
+  if (dash)
+    throw std::invalid_argument(
+        fmt::format("Argumment missing a '-' {}", next.name));
+  else
+    throw std::invalid_argument(
+        fmt::format("Argumment shouldn't start with a '-' {}", next.name));
 }
