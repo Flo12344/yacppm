@@ -1,5 +1,7 @@
 <h1 align="center">YACPPM</h1>
 
+> [!CAUTION]
+> This project is a WIP so expect many changes
 ## Project Description
 
 YACPPM (Yet Another C++ Manager) is a simple c++ project manager 
@@ -16,11 +18,27 @@ I'm making it mainly to experiment with managing build setup and also to simplif
 - Cross-compilation support
 
 ## Current commands
-- yacppm new <project_name> -template=<template_name> (currently only executables)
-- yacppm add -h <git_repo> <version> (header_only)
-- yacppm add -c <git_repo> <version> (cmake projects)
+- yacppm new <project_name> <option> (currently only executables)
+
+| Option          | Description                          | Example|
+|---|---|---|
+| -template        | use selected template for the project| yacppm new project -template=raylib |
+
+- yacppm add <type> <git_repo> <version> (header_only)
+
+| Type          | Description                      |
+|---|---|
+| -h            |header-only lib                   |
+| -c            | cmake lib                        |
+| -llib         | local lib                        |
+
 - yacppm add <git_repo> <version> (not implemented yet but would try to get the type based on files)
-- yacppm build (currently only support local builds)
+- yacppm build <target> <arch>
+
+| Target          | Description                      | arch |
+|---|---|---|
+| windows            | build for Windows on linux (only one implemented yet)| x86_64 , i386 |
+
 - yacppm run
 - yacppm remove <git_repo or name> (not implemented yet)
 
