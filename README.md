@@ -33,7 +33,7 @@ I'm making it mainly to experiment with managing build setup and also to simplif
 | -llib         | local lib                        |
 
 - yacppm add <git_repo> <version> (not implemented yet but would try to get the type based on files)
-- yacppm build <target> <arch>
+- yacppm build \<target> \<arch>
 
 | Target          | Description                      | arch |
 |---|---|---|
