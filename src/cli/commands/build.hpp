@@ -1,5 +1,6 @@
 #pragma once
 #include "generator/cmake_generator.hpp"
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 namespace yacppm {
@@ -18,5 +19,13 @@ inline void build(std::string target = "", std::string arch = "") {
     CmakeGenerator::build_toolchain(target);
   else
     CmakeGenerator::build_toolchain(target, arch);
+
+  std::filesystem::copy_options opt =
+      std::filesystem::copy_options::recursive |
+      std::filesystem::copy_options::overwrite_existing;
+
+  if (std::filesystem::exists("build/compile_commands.json"))
+    std::filesystem::copy("build/compile_commands.json",
+                          "compile_commands.json", opt);
 }
 } // namespace yacppm

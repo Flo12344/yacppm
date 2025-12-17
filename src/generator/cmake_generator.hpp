@@ -56,6 +56,7 @@ public:
       cmake_file << llib.first << "\n";
     }
     cmake_file << ")\n";
+    cmake_file << "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n";
     if (m.package.type == "exec")
       cmake_file << "add_executable(${PROJECT_NAME} ${SOURCES})\n";
     else if (m.package.type == "static")
