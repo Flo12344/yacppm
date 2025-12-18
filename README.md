@@ -41,6 +41,11 @@ I'm making it mainly to experiment with managing build setup and also to simplif
 
 - yacppm run
 - yacppm remove <git_repo or name> (not implemented yet)
+- yacppm set <option> (header_only)
+
+| Type          | Description                      |
+|---|---|
+| -cpp            | set c++ version                   |
 
 ### Example
 ```bash
