@@ -27,7 +27,7 @@ void yacppm::ISL_Getter::parse_src_folder(const std::string &path) {
                                     entry.path().extension() == ".cpp")) {
       sources.push_back(entry.path().relative_path());
     } else if (entry.is_directory()) {
-      parse_src_folder(path + entry.path().filename().string());
+      parse_src_folder(path + "/" + entry.path().filename().string());
     }
   }
 }
