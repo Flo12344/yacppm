@@ -97,8 +97,11 @@ void yacppm::Parser::check_command() {
   if (check(false, "set")) {
     consume();
     while (check(true)) {
-      if (check(true, "cpp"))
+      if (check(true, "cpp")) {
+        if (args[pos].value.empty())
+          throw std::invalid_argument("Missing cpp version");
         set_cxx(std::stoi(args[pos].value));
+      }
       consume();
     }
     return;
