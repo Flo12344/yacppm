@@ -1,0 +1,7 @@
+// still a lot of thinking on how to handle the multiple build setup
+var api
+var version
+
+type shared
+
+cmake https://github.com/godotengine/godot-cpp/tree/master -b={version} -build_opt={api}
