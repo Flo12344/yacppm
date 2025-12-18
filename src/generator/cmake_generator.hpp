@@ -14,7 +14,7 @@
 namespace yacppm {
 class CmakeGenerator {
 public:
-  static void gen_build_cmake(const Manifest &m) {
+  static void gen_build_cmake(const Manifest &m, bool is_release) {
     ISL_Getter isl;
     isl.get_project_isl(m);
 
@@ -24,6 +24,13 @@ public:
     cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
     cmake_file << "if(DEFINED CMAKE_TOOLCHAIN_FILE)\n";
     cmake_file << " include(${CMAKE_TOOLCHAIN_FILE})\n endif()\n";
+
+    if (is_release) {
+      cmake_file << "set(CMAKE_BUILD_TYPE \"Release\")\n";
+    } else {
+      cmake_file << "set(CMAKE_BUILD_TYPE \"Debug\")\n";
+    }
+
     if (m.package.settings.contains("cpp")) {
       cmake_file << "set(CMAKE_CXX_STANDARD " << m.package.settings.at("cpp")
                  << ")\n";

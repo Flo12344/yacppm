@@ -3,9 +3,9 @@
 
 #include "command_helper.hpp"
 namespace yacppm {
-inline void run() {
+inline void run(bool is_release) {
   Manifest m = parse_manifest(toml::parse_file("yacppm.toml"));
-  build();
+  build(is_release);
   run_command("cd build/bin/ && ./" + m.package.name);
 }
 } // namespace yacppm

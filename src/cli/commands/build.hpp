@@ -4,7 +4,8 @@
 #include <stdexcept>
 #include <string>
 namespace yacppm {
-inline void build(std::string target = "", std::string arch = "") {
+inline void build(bool is_release, std::string target = "",
+                  std::string arch = "") {
   std::fstream yacppm_file("yacppm.toml", std::ios::in);
   if (yacppm_file.fail()) {
     throw std::runtime_error("Failed, not in a yacppm Project");
@@ -12,7 +13,7 @@ inline void build(std::string target = "", std::string arch = "") {
   yacppm_file.close();
   Manifest m = parse_manifest(toml::parse_file("yacppm.toml"));
 
-  CmakeGenerator::gen_build_cmake(m);
+  CmakeGenerator::gen_build_cmake(m, is_release);
   if (target.empty())
     CmakeGenerator::build();
   else if (arch.empty())

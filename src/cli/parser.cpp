@@ -4,6 +4,7 @@
 #include "commands/build.hpp"
 #include "commands/new.hpp"
 #include "commands/run.hpp"
+#include "fmt/color.h"
 #include "set.hpp"
 #include <optional>
 #include <stdexcept>
@@ -33,21 +34,47 @@ void yacppm::Parser::check_command() {
     throw std::invalid_argument("Missing command");
 
   if (check(false, "run")) {
-    run();
+    consume();
+    bool is_release = false;
+    if (check(false)) {
+      if (check(false, "Release")) {
+        consume();
+        is_release = true;
+      } else if (check(false, "Debug")) {
+        consume();
+      } else {
+        throw std::invalid_argument(
+            fmt::format("Unknown argument {}", consume()->name));
+      }
+    }
+    run(is_release);
     return;
   }
   if (check(false, "build")) {
     consume();
+
+    bool is_release = false;
+    if (check(false)) {
+      if (check(false, "Release")) {
+        consume();
+        is_release = true;
+      } else if (check(false, "Debug")) {
+        consume();
+      } else {
+        throw std::invalid_argument(
+            fmt::format("Unknown argument {}", consume()->name));
+      }
+    }
     if (check(true, "target")) {
       std::string target = consume()->value;
       if (check(true, "arch")) {
         std::string arch = consume()->value;
-        build(target, arch);
+        build(is_release, target, arch);
       } else {
-        build(target);
+        build(is_release, target);
       }
     } else {
-      build();
+      build(is_release);
     }
     return;
   }
