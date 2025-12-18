@@ -16,10 +16,9 @@
 #define PCLOSE pclose
 #endif
 
-inline void run_command(std::string command) {
+inline void run_command(const std::string &command) {
   std::array<char, 256> buf;
-  std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(command.c_str(), "r"),
-                                                PCLOSE);
+  std::unique_ptr<FILE, int (*)(FILE *)> pipe(POPEN(command.c_str(), "r"), PCLOSE);
   if (!pipe) {
     throw std::runtime_error("popen failed!");
   }
