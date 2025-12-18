@@ -1,7 +1,7 @@
 #pragma once
 #include "build.hpp"
 
-#include "command_helper.hpp"
+#include "utils/command_helper.hpp"
 namespace yacppm {
 inline void run(bool is_release) {
   Manifest m = parse_manifest(toml::parse_file("yacppm.toml"));

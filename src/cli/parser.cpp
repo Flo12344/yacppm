@@ -1,11 +1,10 @@
 #include "parser.hpp"
-#include "../utils/logger.hpp"
 #include "commands/add.hpp"
 #include "commands/build.hpp"
 #include "commands/new.hpp"
 #include "commands/run.hpp"
-#include "fmt/color.h"
-#include "set.hpp"
+#include "commands/set.hpp"
+#include "utils/logger.hpp"
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -43,8 +42,7 @@ void yacppm::Parser::check_command() {
       } else if (check(false, "Debug")) {
         consume();
       } else {
-        throw std::invalid_argument(
-            fmt::format("Unknown argument {}", consume()->name));
+        throw std::invalid_argument(fmt::format("Unknown argument {}", consume()->name));
       }
     }
     run(is_release);
@@ -61,8 +59,7 @@ void yacppm::Parser::check_command() {
       } else if (check(false, "Debug")) {
         consume();
       } else {
-        throw std::invalid_argument(
-            fmt::format("Unknown argument {}", consume()->name));
+        throw std::invalid_argument(fmt::format("Unknown argument {}", consume()->name));
       }
     }
     if (check(true, "target")) {
@@ -168,27 +165,22 @@ std::optional<yacppm::CLI_Argument> yacppm::Parser::next(int offset) {
   }
   return std::nullopt;
 };
-yacppm::CLI_Argument yacppm::Parser::expect(bool dash, const std::string &name,
-                                            const std::string &type) {
+yacppm::CLI_Argument yacppm::Parser::expect(bool dash, const std::string &name, const std::string &type) {
   auto c = consume();
   if (!c.has_value())
-    throw std::invalid_argument(
-        fmt::format("{} missing after {}", type, args[pos].name));
+    throw std::invalid_argument(fmt::format("{} missing after {}", type, args[pos].name));
 
   CLI_Argument next = c.value();
   if (next.is_dash == dash) {
     if (name.empty())
       return next;
     if (name != next.name)
-      throw std::invalid_argument(
-          fmt::format("Wrong argumment name {} expected {}", next.name, name));
+      throw std::invalid_argument(fmt::format("Wrong argumment name {} expected {}", next.name, name));
     else
       return next;
   }
   if (dash)
-    throw std::invalid_argument(
-        fmt::format("Argumment missing a '-' {}", next.name));
+    throw std::invalid_argument(fmt::format("Argumment missing a '-' {}", next.name));
   else
-    throw std::invalid_argument(
-        fmt::format("Argumment shouldn't start with a '-' {}", next.name));
+    throw std::invalid_argument(fmt::format("Argumment shouldn't start with a '-' {}", next.name));
 }

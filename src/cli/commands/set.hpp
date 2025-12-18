@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/manifest.hpp"
 #include "fmt/color.h"
-#include "manifest.hpp"
 #include <cstdlib>
 #include <string>
 namespace yacppm {

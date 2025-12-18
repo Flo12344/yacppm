@@ -13,10 +13,6 @@ set(SOURCE_FILES
 include_directories(yacppm PRIVATE
     external/
     src/
-    src/utils
-    src/cli
-    src/cli/commands
-    src/core
     external/libgit2/include
     )
 

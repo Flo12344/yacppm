@@ -1,5 +1,5 @@
 #include "cli/parser.hpp"
-#include "logger.hpp"
+#include "utils/logger.hpp"
 #include <exception>
 #include <fmt/base.h>
 

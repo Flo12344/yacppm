@@ -2,7 +2,7 @@
 
 #include "add.hpp"
 #include "core/manifest.hpp"
-#include "logger.hpp"
+#include "utils/logger.hpp"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -19,8 +19,7 @@ inline void create(std::string name, std::string _template, std::string type) {
     return;
   }
   std::filesystem::copy_options opt =
-      std::filesystem::copy_options::recursive |
-      std::filesystem::copy_options::overwrite_existing;
+      std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 
   std::filesystem::copy("templates/" + _template, name, opt);
   if (std::filesystem::exists(name + "/template.deps")) {

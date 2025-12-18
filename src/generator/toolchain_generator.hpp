@@ -1,7 +1,6 @@
 #pragma once
 
-#include "fmt/color.h"
-#include "logger.hpp"
+#include "fmt/format.h"
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -17,8 +16,7 @@ inline void gen_windows_toolchain(std::string architecture) {
     toolchain_file << "set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)\n";
     toolchain_file << "set(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)\n";
   } else {
-    throw std::invalid_argument(fmt::format(
-        "Unsupported architecture for Windows target: {}\n", architecture));
+    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows target: {}\n", architecture));
   }
   toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)\n";
   toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)\n";

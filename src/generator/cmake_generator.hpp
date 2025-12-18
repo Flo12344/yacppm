@@ -1,10 +1,10 @@
 #pragma once
 
+#include "core/manifest.hpp"
 #include "generator/toolchain_generator.hpp"
-#include "logger.hpp"
-#include "manifest.hpp"
 #include "utils/command_helper.hpp"
 #include "utils/isl_getter.hpp"
+#include "utils/logger.hpp"
 #include <fmt/base.h>
 #include <fstream>
 #include <ios>
@@ -32,8 +32,7 @@ public:
     }
 
     if (m.package.settings.contains("cpp")) {
-      cmake_file << "set(CMAKE_CXX_STANDARD " << m.package.settings.at("cpp")
-                 << ")\n";
+      cmake_file << "set(CMAKE_CXX_STANDARD " << m.package.settings.at("cpp") << ")\n";
       cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
       cmake_file << "set(CMAKE_CXX_EXTENSIONS OFF)\n";
     }
@@ -50,9 +49,7 @@ public:
     cmake_file << ")\n";
 
     for (const auto &llib : isl.local_libs) {
-      cmake_file << "find_package(" << llib.first
-                 << (llib.second.empty() ? "" : " " + llib.second)
-                 << " REQUIRED)\n";
+      cmake_file << "find_package(" << llib.first << (llib.second.empty() ? "" : " " + llib.second) << " REQUIRED)\n";
     }
 
     cmake_file << "set(LIBRARIES\n";
@@ -96,8 +93,7 @@ public:
       throw std::invalid_argument("Unsupported target");
     }
 
-    std::string cmd =
-        "cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake 2>&1";
+    std::string cmd = "cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake 2>&1";
     run_command(cmd);
 
     cmd = "cmake --build build 2>&1";
