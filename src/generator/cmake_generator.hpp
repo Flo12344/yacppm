@@ -24,6 +24,11 @@ public:
     cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
     cmake_file << "if(DEFINED CMAKE_TOOLCHAIN_FILE)\n";
     cmake_file << " include(${CMAKE_TOOLCHAIN_FILE})\n endif()\n";
+    if (m.package.settings.contains("cpp")) {
+      cmake_file << "set(CMAKE_CXX_STANDARD " << m.package.settings.at("cpp")
+                 << ")\n";
+      cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
+    }
     cmake_file << "set(INCLUDES\n";
     cmake_file << "src/\n";
     for (const auto &inc : isl.libs_include_paths) {

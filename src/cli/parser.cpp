@@ -4,6 +4,7 @@
 #include "commands/build.hpp"
 #include "commands/new.hpp"
 #include "commands/run.hpp"
+#include "set.hpp"
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -90,6 +91,16 @@ void yacppm::Parser::check_command() {
     }
 
     create(name, _template, _type);
+    return;
+  }
+
+  if (check(false, "set")) {
+    consume();
+    while (check(true)) {
+      if (check(true, "cpp"))
+        set_cxx(std::stoi(args[pos].value));
+      consume();
+    }
     return;
   }
 

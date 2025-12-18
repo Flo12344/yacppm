@@ -1,7 +1,6 @@
 #pragma once
 #include "../utils/link_utils.hpp"
 #include "../utils/logger.hpp"
-#include "fmt/color.h"
 #include "toml.hpp"
 #include <fstream>
 #include <stdexcept>
@@ -20,6 +19,7 @@ struct Package {
   std::string name;
   std::string version;
   std::string type;
+  std::unordered_map<std::string, std::string> settings;
 };
 
 struct Manifest {
@@ -46,6 +46,10 @@ struct Manifest {
                                   Dependency{version, type, checked, settings});
   }
 
+  void set_settings(std::string name, std::string value) {
+    package.settings.insert_or_assign(name, value);
+  }
+
   void set_type(const std::string &type) {
     if (type == "exec" || type == "static" || type == "shared")
       package.type = type;
@@ -67,6 +71,7 @@ inline Manifest create_manifest(const std::string &project_name) {
   Manifest m;
   m.package.name = project_name;
   m.package.version = "0.1.0";
+  m.package.settings = {};
   return m;
 }
 
@@ -77,6 +82,12 @@ inline Manifest parse_manifest(const toml::table &tbl) {
     m.package.name = pkg->at("name").value_or("");
     m.package.version = pkg->at("version").value_or("");
     m.package.type = pkg->at("type").value_or("exec");
+
+    if (auto *settings = pkg->at("settings").as_table()) {
+      for (auto &&[name, val] : *settings) {
+        m.package.settings.insert_or_assign(name.data(), val.value_or(""));
+      }
+    }
   }
 
   if (auto *deps = tbl["dependencies"].as_table()) {
@@ -108,9 +119,15 @@ inline Manifest parse_manifest(const toml::table &tbl) {
 inline toml::table to_toml(const Manifest &m) {
   toml::table root;
 
+  toml::table pkg_settings;
+  for (auto &[name, set] : m.package.settings) {
+    pkg_settings.insert(name, set);
+  }
+
   root.insert("package", toml::table{{"name", m.package.name},
                                      {"version", m.package.version},
-                                     {"type", m.package.type}});
+                                     {"type", m.package.type},
+                                     {"settings", pkg_settings}});
 
   toml::table deps;
 
