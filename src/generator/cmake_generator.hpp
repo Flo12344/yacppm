@@ -35,6 +35,7 @@ public:
       cmake_file << "set(CMAKE_CXX_STANDARD " << m.package.settings.at("cpp")
                  << ")\n";
       cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
+      cmake_file << "set(CMAKE_CXX_EXTENSIONS OFF)\n";
     }
     cmake_file << "set(INCLUDES\n";
     cmake_file << "src/\n";
@@ -75,6 +76,7 @@ public:
       cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
     else if (m.package.type == "shared")
       cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
+    cmake_file << "include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})\n";
     cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";
 
     cmake_file.close();
