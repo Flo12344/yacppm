@@ -16,6 +16,8 @@ class CmakeGenerator {
 public:
   static void gen_build_cmake(bool is_release) {
     ISL_Getter isl;
+    isl.retrieve_deps();
+    isl.build_deps();
     isl.get_project_isl();
     Package package = Manifest::instance().get_info();
 
