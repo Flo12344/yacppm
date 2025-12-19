@@ -139,7 +139,7 @@ void yacppm::ISL_Getter::process_header(std::string git_file_path, std::string l
 
   libs_include_paths.push_back(lib_file_path);
 }
-void yacppm::ISL_Getter::get_project_isl(const Manifest &m) {
+void yacppm::ISL_Getter::get_project_isl() {
 
   parse_src_folder("src/");
 
@@ -151,11 +151,12 @@ void yacppm::ISL_Getter::get_project_isl(const Manifest &m) {
   if (!std::filesystem::exists(cache_dir + "/libs"))
     std::filesystem::create_directory(cache_dir + "/libs");
 
+  Manifest &m = Manifest::instance();
   std::shared_ptr<ProgressBar> lib_get_bar = ProgressBarManager::instance().get_bar(
-      ProgressBarManager::instance().create("Getting libs :", m.dependencies.size()));
+      ProgressBarManager::instance().create("Getting libs :", m.get_deps().size()));
   int count = 0;
   git_libgit2_init();
-  for (auto &dep : m.dependencies) {
+  for (auto &dep : m.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB)
       continue;
 
@@ -181,10 +182,10 @@ void yacppm::ISL_Getter::get_project_isl(const Manifest &m) {
   }
 
   std::shared_ptr<ProgressBar> lib_build_bar = ProgressBarManager::instance().get_bar(
-      ProgressBarManager::instance().create("Building libs :", m.dependencies.size()));
+      ProgressBarManager::instance().create("Building libs :", m.get_deps().size()));
 
   count = 0;
-  for (auto &dep : m.dependencies) {
+  for (auto &dep : m.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
       local_libs.push_back({dep.first, dep.second.version});
       continue;

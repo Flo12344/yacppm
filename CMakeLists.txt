@@ -5,6 +5,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 set(SOURCE_FILES
     src/main.cpp
+    src/core/manifest.cpp
     src/utils/git_utils.cpp
     src/utils/isl_getter.cpp
     src/cli/parser.cpp

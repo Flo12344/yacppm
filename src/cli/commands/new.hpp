@@ -10,9 +10,9 @@
 namespace yacppm {
 inline void create(std::string name, std::string _template, std::string type) {
   std::filesystem::create_directory(name);
-  Manifest m = create_manifest(name);
-  m.set_type(type);
-  save_manifest(m, name + "/yacppm.toml");
+  Manifest::instance().create(name);
+  Manifest::instance().set_type(type);
+  Manifest::instance().save(name + "/yacppm.toml");
 
   if (!std::filesystem::exists("templates/" + _template)) {
     Loggger::err("Unknown template : {}", _template);
@@ -30,8 +30,8 @@ inline void create(std::string name, std::string _template, std::string type) {
         continue;
       }
       if (line.starts_with("type")) {
-        m.set_type(line.substr(line.find_first_of(" ") + 1));
-        save_manifest(m, name + "/yacppm.toml");
+        Manifest::instance().set_type(line.substr(line.find_first_of(" ") + 1));
+        Manifest::instance().save(name + "/yacppm.toml");
         continue;
       }
 

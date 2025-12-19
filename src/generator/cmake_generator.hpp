@@ -14,13 +14,14 @@
 namespace yacppm {
 class CmakeGenerator {
 public:
-  static void gen_build_cmake(const Manifest &m, bool is_release) {
+  static void gen_build_cmake(bool is_release) {
     ISL_Getter isl;
-    isl.get_project_isl(m);
+    isl.get_project_isl();
+    Package package = Manifest::instance().get_info();
 
     std::fstream cmake_file("CMakeLists.txt", std::ios::out);
     cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
-    cmake_file << "project(" << m.package.name << " LANGUAGES C CXX)\n";
+    cmake_file << "project(" << package.name << " LANGUAGES C CXX)\n";
     cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
     cmake_file << "if(DEFINED CMAKE_TOOLCHAIN_FILE)\n";
     cmake_file << " include(${CMAKE_TOOLCHAIN_FILE})\n endif()\n";
@@ -31,8 +32,8 @@ public:
       cmake_file << "set(CMAKE_BUILD_TYPE \"Debug\")\n";
     }
 
-    if (m.package.settings.contains("cpp")) {
-      cmake_file << "set(CMAKE_CXX_STANDARD " << m.package.settings.at("cpp") << ")\n";
+    if (package.settings.contains("cpp")) {
+      cmake_file << "set(CMAKE_CXX_STANDARD " << package.settings.at("cpp") << ")\n";
       cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
       cmake_file << "set(CMAKE_CXX_EXTENSIONS OFF)\n";
     }
@@ -67,11 +68,11 @@ public:
     }
     cmake_file << ")\n";
     cmake_file << "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n";
-    if (m.package.type == "exec")
+    if (package.type == "exec")
       cmake_file << "add_executable(${PROJECT_NAME} ${SOURCES})\n";
-    else if (m.package.type == "static")
+    else if (package.type == "static")
       cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
-    else if (m.package.type == "shared")
+    else if (package.type == "shared")
       cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
     cmake_file << "include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})\n";
     cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";

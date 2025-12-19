@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/manifest.hpp"
 #include <git2/checkout.h>
 #include <git2/clone.h>
 #include <git2/common.h>
@@ -28,7 +27,7 @@ class ISL_Getter {
   void process_header(std::string git_file_path, std::string lib_file_path, bool already_built);
 
 public:
-  void get_project_isl(const Manifest &m);
+  void get_project_isl();
 
 public:
   std::vector<std::string> libs_paths;
