@@ -10,6 +10,6 @@ namespace yacppm {
 class CmakeGenerator {
 public:
   static void gen_build_cmake();
-  static void gen_windows_toolchain(std::string architecture);
+  static void gen_windows_toolchain(const std::string &architecture);
 };
 } // namespace yacppm

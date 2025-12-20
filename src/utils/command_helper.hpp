@@ -25,6 +25,6 @@ inline void run_command(const std::string &command) {
 
   // TODO: Parse cmake outputs
   while (fgets(buf.data(), buf.size(), pipe.get()) != nullptr) {
-    Loggger::verbose(buf.data());
+    Loggger::verbose("{}", buf.data());
   }
 }

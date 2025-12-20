@@ -1,6 +1,8 @@
 #include "isl_getter.hpp"
+#include "core/builder.hpp"
 #include "core/manifest.hpp"
 #include "fmt/color.h"
+#include "logger.hpp"
 #include "utils/command_helper.hpp"
 #include "utils/git_utils.hpp"
 #include <filesystem>
@@ -78,7 +80,8 @@ void yacppm::ISL_Getter::get_project_isl() {
       continue;
     }
     auto rep = git::get_user_repo(dep.second.git);
-    std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version;
+    std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
+                                Builder::instance().get_build_hash();
 
     switch (pkg_type(dep.second.type)) {
     case CMAKE: {
@@ -112,7 +115,8 @@ void yacppm::ISL_Getter::build_deps() {
     auto rep = git::get_user_repo(dep.second.git);
     lib_build_bar->set_label(rep->first + "/" + rep->second);
     std::string git_file_path = cache_dir + "/git/" + rep->first + "_" + rep->second;
-    std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version;
+    std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
+                                Builder::instance().get_build_hash();
     if (!std::filesystem::exists(git_file_path)) {
       continue;
     }
@@ -184,27 +188,40 @@ void yacppm::ISL_Getter::retrieve_deps() {
 
 void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_file_path) {
   if (std::filesystem::exists(git_file_path + "/CMakeLists.txt")) {
-    std::string cmd = "cmake -S " + git_file_path + "/. -B " + git_file_path + "/build 2>&1";
+    std::string cmd = "cmake -S " + git_file_path + "/ -B " + git_file_path + "/build ";
+    if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
+      cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
+    }
+    cmd += "2>&1";
     run_command(cmd);
 
-    cmd = "cmake --build  " + git_file_path + "/build 2>&1";
+    cmd = "cmake --build " + git_file_path + "/build 2>&1";
     run_command(cmd);
   } else {
     throw std::invalid_argument(fmt::format("Unable to find CMakeLists.txt for : {}", current_repo));
   }
 
-  std::string include_file_path = git_file_path + "/include";
-  for (const auto &entry : std::filesystem::directory_iterator(git_file_path + "/build")) {
-    if (entry.is_directory() && entry.path().filename() != "CMakeFiles") {
-      if (std::filesystem::exists(entry.path().string() + "/include")) {
-        include_file_path = entry.path().string() + "/include";
+  auto libs = find_libs(git_file_path + "/build");
+  std::filesystem::copy_options opt =
+      std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
+  for (const auto &lib : libs) {
+    std::filesystem::copy(git_file_path + "/build/" + lib, lib_file_path, opt);
+  }
+
+  if (libs.empty())
+    for (const auto &entry : std::filesystem::directory_iterator(git_file_path + "/build")) {
+      if (entry.is_directory() && entry.path().filename() != "CMakeFiles") {
+        libs = find_libs(entry.path());
+        if (!libs.empty())
+          break;
       }
     }
-    if (std::filesystem::exists(include_file_path)) {
-      std::filesystem::copy_options opt =
-          std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
-      std::filesystem::copy(include_file_path, lib_file_path + "/include", opt);
-    }
+
+  std::string include_file_path = git_file_path + "/include";
+  if (std::filesystem::exists(include_file_path)) {
+    std::filesystem::copy_options opt =
+        std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
+    std::filesystem::copy(include_file_path, lib_file_path + "/include", opt);
   }
 }
 
