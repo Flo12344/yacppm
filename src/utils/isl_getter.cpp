@@ -2,8 +2,10 @@
 #include "core/builder.hpp"
 #include "core/manifest.hpp"
 #include "fmt/color.h"
+#include "generator/cmake_generator.hpp"
 #include "logger.hpp"
 #include "utils/command_helper.hpp"
+#include "utils/constant.hpp"
 #include "utils/git_utils.hpp"
 #include <filesystem>
 #include <stdexcept>
@@ -28,7 +30,7 @@ void yacppm::ISL_Getter::parse_src_folder(const std::string &path) {
   auto files = std::filesystem::directory_iterator(path);
   for (const auto &entry : files) {
     if (entry.is_regular_file() && (entry.path().extension() == ".c" || entry.path().extension() == ".cpp")) {
-      sources.push_back(entry.path().relative_path());
+      sources.push_back(entry.path().relative_path().string());
     } else if (entry.is_directory()) {
       parse_src_folder(path + "/" + entry.path().filename().string());
     }
@@ -192,6 +194,9 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
     }
+    if (std::filesystem::exists("toolchain.cmake")) {
+      cmd += CmakeGenerator::get_windows_args(Builder::instance().arch);
+    }
     cmd += "2>&1";
     run_command(cmd);
 
@@ -213,8 +218,8 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     std::string _path;
     for (const auto &entry : std::filesystem::directory_iterator(git_file_path + "/build")) {
       if (entry.is_directory() && entry.path().filename() != "CMakeFiles") {
-        _path = entry.path();
-        libs = find_libs(entry.path());
+        _path = entry.path().string();
+        libs = find_libs(entry.path().string());
         if (std::filesystem::exists(entry.path().string() + "/include")) {
           include_file_path = entry.path().string() + "/include";
         }

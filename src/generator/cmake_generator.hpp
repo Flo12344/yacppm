@@ -11,5 +11,6 @@ class CmakeGenerator {
 public:
   static void gen_build_cmake();
   static void gen_windows_toolchain(const std::string &architecture);
+  static std::string get_windows_args(const std::string &architecture);
 };
 } // namespace yacppm

@@ -1,0 +1,22 @@
+[dependencies.fmt]
+git = 'https://github.com/fmtlib/fmt.git'
+type = 'cmake'
+version = '12.1.0'
+
+[dependencies.libgit2]
+git = 'https://github.com/libgit2/libgit2.git'
+type = 'cmake'
+version = 'v1.9.2'
+
+[dependencies.tomlplusplus]
+git = 'https://github.com/marzer/tomlplusplus.git'
+type = 'header'
+version = 'v3.4.0'
+
+[package]
+name = 'yacppm'
+type = 'exec'
+version = '0.1.0'
+
+    [package.settings]
+    cpp = '20'

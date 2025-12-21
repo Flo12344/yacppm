@@ -36,7 +36,9 @@ inline void run_command(const std::string &command) {
 inline std::string get_bin_path() {
   std::string path;
 #ifdef _WIN32
-  path = GetModuleFileName(NULL);
+  char _path[MAX_PATH] = {0};
+  GetModuleFileName(NULL, _path, MAX_PATH);
+  path = _path;
 #elif defined __linux__
   path = std::filesystem::canonical("/proc/self/exe");
 #endif

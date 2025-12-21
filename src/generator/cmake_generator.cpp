@@ -4,6 +4,7 @@
 #include "utils/command_helper.hpp"
 #include "utils/isl_getter.hpp"
 #include "utils/logger.hpp"
+#include <sstream>
 
 void yacppm::CmakeGenerator::gen_build_cmake() {
   ISL_Getter isl;
@@ -80,9 +81,11 @@ void yacppm::CmakeGenerator::gen_windows_toolchain(const std::string &architectu
   if (architecture == "x86_64" || architecture == "x64") {
     toolchain_file << "set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)\n";
     toolchain_file << "set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)\n";
+    toolchain_file << "set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)\n";
   } else if (architecture == "i386" || architecture == "x32") {
     toolchain_file << "set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)\n";
     toolchain_file << "set(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)\n";
+    toolchain_file << "set(CMAKE_RC_COMPILER i686-w64-mingw32-windres)\n";
   } else {
     throw std::invalid_argument(fmt::format("Unsupported architecture for Windows target: {}\n", architecture));
   }
@@ -92,4 +95,25 @@ void yacppm::CmakeGenerator::gen_windows_toolchain(const std::string &architectu
   toolchain_file << "set(CMAKE_EXE_LINKER_FLAGS \"-static-libstdc++ "
                     "-static-libgcc -static\")\n";
   toolchain_file.close();
+}
+std::string yacppm::CmakeGenerator::get_windows_args(const std::string &architecture) {
+  std::ostringstream out;
+  out << "-DCMAKE_SYSTEM_NAME=Windows";
+  if (architecture == "x86_64" || architecture == "x64") {
+    out << "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc ";
+    out << "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ ";
+    out << "-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres ";
+  } else if (architecture == "i386" || architecture == "x32") {
+    out << "-DCMAKE_C_COMPILER=i686-w64-mingw32-gcc ";
+    out << "-DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ ";
+    out << "-DCMAKE_RC_COMPILER=i686-w64-mingw32-windres ";
+  } else {
+    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows target: {}\n", architecture));
+  }
+  out << "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER ";
+  out << "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY ";
+  out << "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY ";
+  out << "-DCMAKE_EXE_LINKER_FLAGS=\"-static-libstdc++ "
+         "-static-libgcc -static\" ";
+  return out.str();
 }

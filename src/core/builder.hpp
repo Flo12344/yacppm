@@ -5,6 +5,7 @@
 #include "manifest.hpp"
 #include "utils/command_helper.hpp"
 #include "utils/constant.hpp"
+#include <filesystem>
 #include <sstream>
 #include <string>
 namespace yacppm {
@@ -44,6 +45,8 @@ public:
       } else if (target != Constant::get_current_os()) {
         throw std::invalid_argument("Unsupported target");
       }
+    } else {
+      std::filesystem::remove("toolchain.cmake");
     }
     this->is_release = is_release;
     this->target = target;
