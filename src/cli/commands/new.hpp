@@ -2,10 +2,13 @@
 
 #include "add.hpp"
 #include "core/manifest.hpp"
+#include "fmt/color.h"
+#include "utils/command_helper.hpp"
 #include "utils/logger.hpp"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 namespace yacppm {
 inline void create(std::string name, std::string _template, std::string type) {
@@ -14,18 +17,21 @@ inline void create(std::string name, std::string _template, std::string type) {
   Manifest::instance().set_type(type);
   Manifest::instance().save(name + "/yacppm.toml");
 
-  if (!std::filesystem::exists("templates/" + _template)) {
-    Loggger::err("Unknown template : {}", _template);
-    return;
+  std::string template_path = get_bin_path() + "/templates/" + _template;
+  if (!std::filesystem::exists(template_path)) {
+    throw std::invalid_argument(fmt::format("Unknown template : {}", _template));
   }
+
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 
-  std::filesystem::copy("templates/" + _template, name, opt);
+  std::filesystem::copy(template_path, name, opt);
   if (std::filesystem::exists(name + "/template.deps")) {
     std::ifstream file(name + "/template.deps");
     std::string line;
+    int lpos = 0;
     while (getline(file, line)) {
+      lpos++;
       if (line.empty()) {
         continue;
       }
@@ -40,6 +46,12 @@ inline void create(std::string name, std::string _template, std::string type) {
       std::string git = line.substr(0, line.find_first_of(" "));
       line = line.substr(line.find_first_of(" ") + 1);
       std::string version = line;
+
+      if (type.empty() || git.empty() || version.empty()) {
+        throw std::invalid_argument(
+            fmt::format("Error with package in template dependencies at line: {} for template: {}", lpos, _template));
+      }
+
       auto t = pkg_type(type);
       switch (t) {
       case HEADER:

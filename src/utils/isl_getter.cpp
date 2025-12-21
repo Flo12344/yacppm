@@ -121,7 +121,7 @@ void yacppm::ISL_Getter::build_deps() {
       continue;
     }
 
-    // FIXME: will need proper check
+    // TODO: will need proper check
     bool already_built = false;
     if (!std::filesystem::exists(lib_file_path)) {
       std::filesystem::create_directories(lib_file_path);
@@ -208,19 +208,27 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     std::filesystem::copy(git_file_path + "/build/" + lib, lib_file_path, opt);
   }
 
-  if (libs.empty())
+  std::string include_file_path = git_file_path + "/include";
+  if (libs.empty()) {
+    std::string _path;
     for (const auto &entry : std::filesystem::directory_iterator(git_file_path + "/build")) {
       if (entry.is_directory() && entry.path().filename() != "CMakeFiles") {
+        _path = entry.path();
         libs = find_libs(entry.path());
+        if (std::filesystem::exists(entry.path().string() + "/include")) {
+          include_file_path = entry.path().string() + "/include";
+        }
         if (!libs.empty())
           break;
       }
     }
 
-  std::string include_file_path = git_file_path + "/include";
+    for (const auto &lib : libs) {
+      std::filesystem::copy(_path + "/" + lib, lib_file_path, opt);
+    }
+  }
+
   if (std::filesystem::exists(include_file_path)) {
-    std::filesystem::copy_options opt =
-        std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
     std::filesystem::copy(include_file_path, lib_file_path + "/include", opt);
   }
 }
@@ -260,6 +268,7 @@ void yacppm::ISL_Getter::cmake_isl(std::string lib_file_path) {
   for (const auto &lib : lib_names) {
     libs_names.push_back(lib);
   }
+
   if (std::filesystem::exists(include_file_path)) {
     libs_include_paths.push_back(lib_file_path + "/include");
   }

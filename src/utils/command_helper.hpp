@@ -1,6 +1,7 @@
 #pragma once
 #include "logger.hpp"
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -8,14 +9,17 @@
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
+#include <windows.h>
 #define POPEN _popen
 #define PCLOSE _pclose
-#else
+#elif defined __linux__
+#include <limits.h>
 #include <unistd.h>
 #define POPEN popen
 #define PCLOSE pclose
 #endif
 
+namespace yacppm {
 inline void run_command(const std::string &command) {
   std::array<char, 256> buf;
   std::unique_ptr<FILE, int (*)(FILE *)> pipe(POPEN(command.c_str(), "r"), PCLOSE);
@@ -28,3 +32,17 @@ inline void run_command(const std::string &command) {
     Loggger::verbose("{}", buf.data());
   }
 }
+
+inline std::string get_bin_path() {
+  std::string path;
+#ifdef _WIN32
+  path = GetModuleFileName(NULL);
+#elif defined __linux__
+  path = std::filesystem::canonical("/proc/self/exe");
+#endif
+  if (path.find_last_of('/') != std::string::npos) {
+    path = path.substr(0, path.find_last_of('/'));
+  }
+  return path;
+}
+} // namespace yacppm
