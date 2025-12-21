@@ -4,6 +4,7 @@
 #include "commands/new.hpp"
 #include "commands/run.hpp"
 #include "commands/set.hpp"
+#include "commands/symlink.hpp"
 #include "utils/logger.hpp"
 #include <optional>
 #include <stdexcept>
@@ -128,6 +129,12 @@ void yacppm::Parser::check_command() {
       }
       consume();
     }
+    return;
+  }
+
+  if (check(false, "symlink")) {
+    consume();
+    symlink();
     return;
   }
 
