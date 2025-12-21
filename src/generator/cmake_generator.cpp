@@ -67,6 +67,7 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
     cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
   else if (package.type == "shared")
     cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
+  cmake_file << "target_compile_definitions(${PROJECT_NAME} PUBLIC VERSION=\"" << package.version << "\")\n";
   cmake_file << "include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})\n";
   cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";
 

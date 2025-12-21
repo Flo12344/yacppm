@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "cli/commands/version.hpp"
 #include "commands/add.hpp"
 #include "commands/build.hpp"
 #include "commands/new.hpp"
@@ -135,6 +136,12 @@ void yacppm::Parser::check_command() {
   if (check(false, "symlink")) {
     consume();
     symlink();
+    return;
+  }
+
+  if (check(true, "v")) {
+    consume();
+    version();
     return;
   }
 

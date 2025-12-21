@@ -32,5 +32,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(yacppm ${SOURCE_FILES})
+target_compile_definitions(yacppm PUBLIC VERSION="0.1.0")
 
 target_link_libraries(yacppm PRIVATE git2 fmt)
