@@ -2,6 +2,7 @@
 #include "core/builder.hpp"
 #include "core/manifest.hpp"
 #include "utils/command_helper.hpp"
+#include "utils/constant.hpp"
 #include "utils/isl_getter.hpp"
 #include "utils/logger.hpp"
 #include <sstream>
@@ -63,6 +64,13 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains("cross_libs")) {
     for (const auto &lib : package.build_extra_options[target]["cross_libs"]) {
       cmake_file << lib << "\n";
+    }
+  }
+  if (target == Constant::get_current_os() && package.build_extra_options.contains(target)) {
+    if (package.build_extra_options[target].contains("libs")) {
+      for (const auto &lib : package.build_extra_options[target]["libs"]) {
+        cmake_file << lib << "\n";
+      }
     }
   }
 
