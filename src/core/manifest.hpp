@@ -40,6 +40,13 @@ public:
                std::unordered_map<std::string, std::string> settings = {});
   void set_settings(std::string name, std::string value);
   void set_type(const std::string &type);
+  void add_target_option(const std::string &target, const std::string &name, std::vector<std::string> value) {
+    if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains(name)) {
+      package.build_extra_options[target][name].insert(package.build_extra_options[target][name].end(), value.begin(),
+                                                       value.end());
+    } else
+      package.build_extra_options[target].insert_or_assign(name, value);
+  }
 
   Package &get_info() { return package; }
   std::unordered_map<std::string, Dependency> &get_deps() { return dependencies; }

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 namespace yacppm {
 inline void create(std::string name, std::string _template, std::string type) {
   std::filesystem::create_directory(name);
@@ -37,6 +38,26 @@ inline void create(std::string name, std::string _template, std::string type) {
       }
       if (line.starts_with("type")) {
         Manifest::instance().set_type(line.substr(line.find_first_of(" ") + 1));
+        Manifest::instance().save(name + "/yacppm.toml");
+        continue;
+      }
+      if (line.starts_with("target")) {
+        line = line.substr(line.find_first_of(".") + 1);
+        std::string target = line.substr(0, line.find_first_of("."));
+        line = line.substr(line.find_first_of(".") + 1);
+        std::string option = line.substr(0, line.find_first_of(" "));
+        line = line.substr(line.find_first_of(" ") + 1);
+        bool keep_going = true;
+        std::vector<std::string> options;
+        while (keep_going) {
+          std::string arg = line.substr(1, line.find_first_of("\"", 2));
+          line = line.substr(line.find_first_of("\"", 2) + 1);
+          options.push_back(arg);
+          if (line.empty() || !line.starts_with(",")) {
+            keep_going = false;
+          }
+        }
+        Manifest::instance().add_target_option(target, option, options);
         Manifest::instance().save(name + "/yacppm.toml");
         continue;
       }
