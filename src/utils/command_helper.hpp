@@ -49,6 +49,7 @@ inline std::string to_camel_case(const std::string &convert) {
       out += c;
     }
   }
+  return out;
 }
 
 inline std::string get_bin_path() {
