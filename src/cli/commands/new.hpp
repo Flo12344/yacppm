@@ -50,7 +50,7 @@ inline void create(std::string name, std::string _template, std::string type) {
         bool keep_going = true;
         std::vector<std::string> options;
         while (keep_going) {
-          std::string arg = line.substr(1, line.find_first_of("\"", 2));
+          std::string arg = line.substr(1, line.find_first_of("\"", 2) - 1);
           line = line.substr(line.find_first_of("\"", 2) + 1);
           options.push_back(arg);
           if (line.empty() || !line.starts_with(",")) {

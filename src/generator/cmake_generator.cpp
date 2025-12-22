@@ -15,13 +15,6 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   Package package = Manifest::instance().get_info();
   std::string target = Builder::instance().target;
 
-  for (auto &test : package.build_extra_options) {
-    Loggger::info(test.first);
-    for (auto &tests : test.second) {
-      Loggger::info(tests.first);
-    }
-  }
-
   std::fstream cmake_file("CMakeLists.txt", std::ios::out);
   cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
   cmake_file << "project(" << package.name << " LANGUAGES C CXX)\n";
