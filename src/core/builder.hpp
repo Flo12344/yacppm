@@ -55,21 +55,16 @@ public:
     CmakeGenerator::gen_build_cmake();
   }
   void build() {
+    std::string cmd = "cmake -S . -B build/" + target + " ";
     if (target != Constant::get_current_os()) {
-
-      std::string cmd = "cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake 2>&1";
-      run_command(cmd);
-
-      cmd = "cmake --build build 2>&1";
-      run_command(cmd);
-    } else {
-
-      std::string cmd = "cmake -S . -B build 2>&1";
-      run_command(cmd);
-
-      cmd = "cmake --build build 2>&1";
-      run_command(cmd);
+      cmd += "-DCMAKE_TOOLCHAIN_FILE=toolchain.cmake";
     }
+
+    cmd += " 2>&1";
+    run_command(cmd);
+
+    cmd = "cmake --build build/" + target + " 2>&1";
+    run_command(cmd);
   }
 
   std::string target = "";
