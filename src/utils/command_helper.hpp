@@ -2,6 +2,7 @@
 #include "logger.hpp"
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
@@ -31,6 +32,22 @@ inline void run_command(const std::string &command) {
   // TODO: Parse cmake outputs
   while (fgets(buf.data(), buf.size(), pipe.get()) != nullptr) {
     Loggger::verbose("{}", buf.data());
+  }
+}
+
+inline std::string to_camel_case(const std::string &convert) {
+  bool white_space = true;
+  std::string out;
+  for (const auto &c : convert) {
+    if (c == ' ' || c == '_') {
+      white_space = true;
+      continue;
+    }
+    if (white_space && ::isalpha(c)) {
+      out += ::toupper(c);
+    } else {
+      out += c;
+    }
   }
 }
 

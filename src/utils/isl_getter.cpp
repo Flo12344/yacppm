@@ -43,7 +43,11 @@ std::vector<std::string> yacppm::ISL_Getter::find_libs(const std::string &path) 
   std::vector<std::string> libs;
   const std::vector<std::string> lib_exts = {".dll", ".so", ".a", ".lib"};
 
-  for (const auto &entry : std::filesystem::directory_iterator(path)) {
+  std::string _path = path;
+  if (auto tmp = path + "/" + ::to_camel_case(path); std::filesystem::exists(tmp))
+    _path = tmp;
+
+  for (const auto &entry : std::filesystem::directory_iterator(_path)) {
     if (entry.is_regular_file()) {
       std::string ext = entry.path().extension().string();
       for (const auto &lib_ext : lib_exts) {
