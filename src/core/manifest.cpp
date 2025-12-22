@@ -1,4 +1,6 @@
 #include "manifest.hpp"
+#include <unordered_map>
+#include <vector>
 
 using namespace yacppm;
 
@@ -44,6 +46,21 @@ void Manifest::parse(const toml::table &tbl) {
     }
   }
 
+  if (auto *pkg = tbl["target"].as_table()) {
+    for (auto &&[target, map] : *pkg) {
+
+      std::unordered_map<std::string, std::vector<std::string>> target_opt;
+      for (auto &&[vname, arr] : *map.as_table()) {
+        std::vector<std::string> _arr;
+        for (auto &&val : *arr.as_array()) {
+          _arr.push_back(val.value_or(""));
+        }
+        target_opt.insert_or_assign(vname.data(), _arr);
+      }
+      package.build_extra_options[target.data()] = target_opt;
+    }
+  }
+
   if (auto *deps = tbl["dependencies"].as_table()) {
     for (auto &&[name, val] : *deps) {
       Dependency dep;
@@ -80,6 +97,27 @@ toml::table Manifest::to_table() {
                                      {"version", package.version},
                                      {"type", package.type},
                                      {"settings", pkg_settings}});
+
+  if (!package.build_extra_options.empty()) {
+    toml::table extra_options;
+    for (auto &&[target, map] : package.build_extra_options) {
+      if (map.empty())
+        continue;
+      toml::table opt;
+      for (auto &&[name, arr] : map) {
+        toml::array _arr;
+        for (auto &&val : arr)
+          _arr.push_back(val);
+        opt.insert(name, _arr);
+      }
+      if (opt.empty())
+        continue;
+      extra_options.insert(target, opt);
+    }
+    if (!extra_options.empty()) {
+      root.insert("target", extra_options);
+    }
+  }
 
   toml::table deps;
 

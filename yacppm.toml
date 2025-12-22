@@ -16,7 +16,11 @@ version = 'v3.4.0'
 [package]
 name = 'yacppm'
 type = 'exec'
-version = '0.1.0'
+version = '0.1.1'
 
     [package.settings]
     cpp = '20'
+
+[target.windows]
+    cross_libs = ["ws2_32","winhttp","rpcrt4","crypt32"]
+    cross_libs_path = ["/usr/x86_64-w64-mingw32/lib/"]

@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 namespace yacppm {
 
 struct Dependency {
@@ -21,6 +22,7 @@ struct Package {
   std::string version;
   std::string type;
   std::unordered_map<std::string, std::string> settings;
+  std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> build_extra_options;
 };
 
 class Manifest {

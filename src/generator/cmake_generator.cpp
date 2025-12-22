@@ -12,10 +12,19 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   isl.build_deps();
   isl.get_project_isl();
   Package package = Manifest::instance().get_info();
+  std::string target = Builder::instance().target;
+
+  for (auto &test : package.build_extra_options) {
+    Loggger::info(test.first);
+    for (auto &tests : test.second) {
+      Loggger::info(tests.first);
+    }
+  }
 
   std::fstream cmake_file("CMakeLists.txt", std::ios::out);
   cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
   cmake_file << "project(" << package.name << " LANGUAGES C CXX)\n";
+  // cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
   cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
   cmake_file << "if(DEFINED CMAKE_TOOLCHAIN_FILE)\n";
   cmake_file << " include(${CMAKE_TOOLCHAIN_FILE})\n endif()\n";
@@ -51,6 +60,12 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   for (const auto &lib : isl.libs_names) {
     cmake_file << lib << "\n";
   }
+  if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains("cross_libs")) {
+    for (const auto &lib : package.build_extra_options[target]["cross_libs"]) {
+      cmake_file << lib << "\n";
+    }
+  }
+
   cmake_file << ")\n";
   cmake_file << "\n";
   cmake_file << "link_directories(\n";
@@ -59,6 +74,11 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   }
   for (const auto &llib : isl.local_libs) {
     cmake_file << llib.first << "\n";
+  }
+  if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains("cross_libs_path")) {
+    for (const auto &lib : package.build_extra_options[target]["cross_libs_path"]) {
+      cmake_file << lib << "\n";
+    }
   }
   cmake_file << ")\n";
   cmake_file << "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n";
