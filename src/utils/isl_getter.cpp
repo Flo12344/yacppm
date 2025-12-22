@@ -18,8 +18,10 @@ std::string getenv_or(const char *name, const std::string &fallback) {
 
 std::string get_global_cache_dir() {
 #if defined(_WIN32)
-  std::filesystem::path base = getenv_or("LOCALAPPDATA", ".");
-  return base.string() + "/.yacppm";
+  std::string path = getenv_or("LOCALAPPDATA", ".");
+
+  std::replace(path.begin(), path.end(), '\\', '/');
+  return path + "/.yacppm";
 
 #else
   std::filesystem::path home = getenv_or("HOME", ".");

@@ -1,5 +1,6 @@
 #pragma once
 #include "logger.hpp"
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <memory>
@@ -38,7 +39,9 @@ inline std::string get_bin_path() {
 #ifdef _WIN32
   char _path[MAX_PATH] = {0};
   GetModuleFileName(NULL, _path, MAX_PATH);
-  path = _path;
+  path = std::string(_path);
+  std::replace(path.begin(), path.end(), '\\', '/');
+
 #elif defined __linux__
   path = std::filesystem::canonical("/proc/self/exe");
 #endif
