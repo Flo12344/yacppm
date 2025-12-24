@@ -2,6 +2,7 @@
 
 #include "add.hpp"
 #include "core/manifest.hpp"
+#include "core/template_parser/template_manager.hpp"
 #include "fmt/color.h"
 #include "utils/command_helper.hpp"
 #include "utils/logger.hpp"
@@ -10,9 +11,11 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 namespace yacppm {
-inline void create(std::string name, std::string _template, std::string type) {
+inline void create(std::string name, std::string type, std::string _template,
+                   std::unordered_map<std::string, std::string> template_settings) {
   std::filesystem::create_directory(name);
   Manifest::instance().create(name);
   Manifest::instance().set_type(type);
@@ -27,69 +30,72 @@ inline void create(std::string name, std::string _template, std::string type) {
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 
   std::filesystem::copy(template_path, name, opt);
-  if (std::filesystem::exists(name + "/template.deps")) {
-    std::ifstream file(name + "/template.deps");
-    std::string line;
-    int lpos = 0;
-    while (getline(file, line)) {
-      lpos++;
-      if (line.empty()) {
-        continue;
-      }
-      if (line.starts_with("type")) {
-        Manifest::instance().set_type(line.substr(line.find_first_of(" ") + 1));
-        Manifest::instance().save(name + "/yacppm.toml");
-        continue;
-      }
-      if (line.starts_with("target")) {
-        line = line.substr(line.find_first_of(".") + 1);
-        std::string target = line.substr(0, line.find_first_of("."));
-        line = line.substr(line.find_first_of(".") + 1);
-        std::string option = line.substr(0, line.find_first_of(" "));
-        line = line.substr(line.find_first_of(" ") + 1);
-        bool keep_going = true;
-        std::vector<std::string> options;
-        while (keep_going) {
-          std::string arg = line.substr(1, line.find_first_of("\"", 2) - 1);
-          line = line.substr(line.find_first_of("\"", 2) + 1);
-          options.push_back(arg);
-          if (line.empty() || !line.starts_with(",")) {
-            keep_going = false;
-          }
-        }
-        Manifest::instance().add_target_option(target, option, options);
-        Manifest::instance().save(name + "/yacppm.toml");
-        continue;
-      }
-
-      std::string type = line.substr(0, line.find_first_of(" "));
-      line = line.substr(line.find_first_of(" ") + 1);
-      std::string git = line.substr(0, line.find_first_of(" "));
-      line = line.substr(line.find_first_of(" ") + 1);
-      std::string version = line;
-
-      if (type.empty() || git.empty() || version.empty()) {
-        throw std::invalid_argument(
-            fmt::format("Error with package in template dependencies at line: {} for template: {}", lpos, _template));
-      }
-
-      auto t = pkg_type(type);
-      switch (t) {
-      case HEADER:
-        add_header_only(git, version, name + "/");
-        break;
-      case CMAKE:
-        add_cmake(git, version, name + "/");
-        break;
-      case LLIB:
-        add_local_lib(git, version, name + "/");
-        break;
-      case PKG_TYPE_MAX:
-        break;
-      }
-    }
-    file.close();
-  }
-  std::filesystem::remove(name + "/template.deps");
+  TemplateManager tokens;
+  tokens.use_template(name + "/template.deps", template_settings);
+  // if (std::filesystem::exists(name + "/template.deps")) {
+  //   std::ifstream file(name + "/template.deps");
+  //   std::string line;
+  //   int lpos = 0;
+  //   while (getline(file, line)) {
+  //     lpos++;
+  //     if (line.empty()) {
+  //       continue;
+  //     }
+  //     if (line.starts_with("type")) {
+  //       Manifest::instance().set_type(line.substr(line.find_first_of(" ") + 1));
+  //       Manifest::instance().save(name + "/yacppm.toml");
+  //       continue;
+  //     }
+  //     if (line.starts_with("target")) {
+  //       line = line.substr(line.find_first_of(".") + 1);
+  //       std::string target = line.substr(0, line.find_first_of("."));
+  //       line = line.substr(line.find_first_of(".") + 1);
+  //       std::string option = line.substr(0, line.find_first_of(" "));
+  //       line = line.substr(line.find_first_of(" ") + 1);
+  //       bool keep_going = true;
+  //       std::vector<std::string> options;
+  //       while (keep_going) {
+  //         std::string arg = line.substr(1, line.find_first_of("\"", 2) - 1);
+  //         line = line.substr(line.find_first_of("\"", 2) + 1);
+  //         options.push_back(arg);
+  //         if (line.empty() || !line.starts_with(",")) {
+  //           keep_going = false;
+  //         }
+  //       }
+  //       Manifest::instance().add_target_option(target, option, options);
+  //       Manifest::instance().save(name + "/yacppm.toml");
+  //       continue;
+  //     }
+  //
+  //     std::string type = line.substr(0, line.find_first_of(" "));
+  //     line = line.substr(line.find_first_of(" ") + 1);
+  //     std::string git = line.substr(0, line.find_first_of(" "));
+  //     line = line.substr(line.find_first_of(" ") + 1);
+  //     std::string version = line;
+  //
+  //     if (type.empty() || git.empty() || version.empty()) {
+  //       throw std::invalid_argument(
+  //           fmt::format("Error with package in template dependencies at line: {} for template: {}", lpos,
+  //           _template));
+  //     }
+  //
+  //     auto t = pkg_type(type);
+  //     switch (t) {
+  //     case HEADER:
+  //       add_header_only(git, version, name + "/");
+  //       break;
+  //     case CMAKE:
+  //       add_cmake(git, version, name + "/");
+  //       break;
+  //     case LLIB:
+  //       add_local_lib(git, version, name + "/");
+  //       break;
+  //     case PKG_TYPE_MAX:
+  //       break;
+  //     }
+  //   }
+  //   file.close();
+  // }
+  // std::filesystem::remove(name + "/template.deps");
 }
 } // namespace yacppm

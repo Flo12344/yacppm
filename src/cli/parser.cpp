@@ -10,6 +10,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 
 void yacppm::Parser::parse_cli_args(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
@@ -107,16 +108,20 @@ void yacppm::Parser::check_command() {
     std::string name = expect(false, "", "Project name").name;
     std::string _template = "default";
     std::string _type = "exec";
+    std::unordered_map<std::string, std::string> template_settings;
 
-    while (check(true)) {
+    while (pos < args.size()) {
       if (check(true, "template"))
         _template = args[pos].value;
       if (check(true, "type"))
         _type = args[pos].value;
+      if (!_template.empty() && check(false)) {
+        template_settings.insert_or_assign(args[pos].name, args[pos].value);
+      }
       consume();
     }
 
-    create(name, _template, _type);
+    create(name, _type, _template, template_settings);
     return;
   }
 
