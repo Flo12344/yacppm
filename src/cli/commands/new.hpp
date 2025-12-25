@@ -19,7 +19,7 @@ inline void create(std::string name, std::string type, std::string _template,
   std::filesystem::create_directory(name);
   Manifest::instance().create(name);
   Manifest::instance().set_type(type);
-  Manifest::instance().save(name + "/yacppm.toml");
+  Manifest::instance().save(name);
 
   std::string template_path = get_bin_path() + "/templates/" + _template;
   if (!std::filesystem::exists(template_path)) {
