@@ -47,6 +47,10 @@ public:
     } else
       package.build_extra_options[target].insert_or_assign(name, value);
   }
+  void set_targets_options(
+      const std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> &options) {
+    package.build_extra_options = options;
+  }
 
   Package &get_info() { return package; }
   std::unordered_map<std::string, Dependency> &get_deps() { return dependencies; }
