@@ -1,6 +1,7 @@
 #include "template_manager.hpp"
 #include "core/manifest.hpp"
 #include "utils/logger.hpp"
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -81,7 +82,7 @@ void yacppm::TemplateManager::parse_target_settings(const std::string &line) {
     if (o.size() > 0)
       options.push_back(o);
   }
-  tmp_target_option[target][option] = options;
+  template_target_option[target][option] = options;
 }
 
 void yacppm::TemplateManager::parse_type(const std::string &line) {
@@ -144,12 +145,14 @@ void yacppm::TemplateManager::use_template(const std::string &path,
     }
   }
 
-  Manifest::instance().set_targets_options(tmp_target_option);
+  Manifest::instance().set_targets_options(template_target_option);
 
   if (!project_type.empty())
     Manifest::instance().set_type(project_type);
 
   Manifest::instance().save(project_path);
+
+  std::filesystem::remove(project_path + "template.deps");
 }
 void yacppm::TemplateManager::check_for_empty_var() {
   for (const auto &var : vtable) {

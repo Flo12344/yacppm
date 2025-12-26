@@ -5,6 +5,7 @@
 #include "utils/constant.hpp"
 #include "utils/isl_getter.hpp"
 #include "utils/logger.hpp"
+#include <fstream>
 #include <sstream>
 
 void yacppm::CmakeGenerator::gen_build_cmake() {
@@ -12,10 +13,21 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   isl.retrieve_deps();
   isl.build_deps();
   isl.get_project_isl();
+
   Package package = Manifest::instance().get_info();
   std::string target = Builder::instance().target;
+  std::string extended_target = target + "." + Builder::instance().arch;
 
   std::fstream cmake_file("CMakeLists.txt", std::ios::out);
+
+  auto add_if_extra_build = [&](const std::string &target, const std::string &name) {
+    if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains(name)) {
+      for (const auto &lib : package.build_extra_options[target][name]) {
+        cmake_file << lib << "\n";
+      }
+    }
+  };
+
   cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
   cmake_file << "project(" << package.name << " LANGUAGES C CXX)\n";
   // cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
@@ -29,6 +41,9 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Debug\")\n";
   }
 
+  add_if_extra_build(target, "libs");
+  add_if_extra_build(extended_target, "libs");
+
   if (package.settings.contains("cpp")) {
     cmake_file << "set(CMAKE_CXX_STANDARD " << package.settings.at("cpp") << ")\n";
     cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
@@ -39,6 +54,7 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   for (const auto &inc : isl.libs_include_paths) {
     cmake_file << inc << "\n";
   }
+
   cmake_file << ")\n";
   cmake_file << "set(SOURCES\n";
   for (const auto &src : isl.sources) {
@@ -59,13 +75,9 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
       cmake_file << lib << "\n";
     }
   }
-  if (target == Constant::get_current_os() && package.build_extra_options.contains(target)) {
-    if (package.build_extra_options[target].contains("libs")) {
-      for (const auto &lib : package.build_extra_options[target]["libs"]) {
-        cmake_file << lib << "\n";
-      }
-    }
-  }
+
+  add_if_extra_build(target, "libs");
+  add_if_extra_build(extended_target, "libs");
 
   cmake_file << ")\n";
   cmake_file << "\n";
@@ -76,11 +88,10 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   for (const auto &llib : isl.local_libs) {
     cmake_file << llib.first << "\n";
   }
-  if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains("cross_libs_path")) {
-    for (const auto &lib : package.build_extra_options[target]["cross_libs_path"]) {
-      cmake_file << lib << "\n";
-    }
-  }
+
+  add_if_extra_build(target, "cross_libs_path");
+  add_if_extra_build(extended_target, "cross_libs_path");
+
   cmake_file << ")\n";
   cmake_file << "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n";
   if (package.type == "exec")

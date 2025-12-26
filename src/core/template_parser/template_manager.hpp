@@ -40,7 +40,7 @@ public:
 
 private:
   std::unordered_map<std::string, std::string> vtable;
-  std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> tmp_target_option;
+  std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> template_target_option;
   std::vector<tmpDeps> libs;
   std::string project_type;
   int current_line = 0;
