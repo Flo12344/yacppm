@@ -84,6 +84,12 @@ void yacppm::TemplateManager::parse_target_settings(const std::string &line) {
   tmp_target_option[target][option] = options;
 }
 
+void yacppm::TemplateManager::parse_type(const std::string &line) {
+  pos = 5;
+  std::string type = parse_element(line);
+  project_type = type;
+}
+
 void yacppm::TemplateManager::parse(const std::string &path) {
   std::ifstream file(path);
   std::string line;
@@ -100,6 +106,7 @@ void yacppm::TemplateManager::parse(const std::string &path) {
     } else if (line.starts_with("target")) {
       parse_target_settings(line);
     } else if (line.starts_with("type")) {
+      parse_type(line);
     }
     current_line++;
   }
@@ -138,6 +145,10 @@ void yacppm::TemplateManager::use_template(const std::string &path,
   }
 
   Manifest::instance().set_targets_options(tmp_target_option);
+
+  if (!project_type.empty())
+    Manifest::instance().set_type(project_type);
+
   Manifest::instance().save(project_path);
 }
 void yacppm::TemplateManager::check_for_empty_var() {

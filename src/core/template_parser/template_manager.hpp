@@ -29,6 +29,7 @@ private:
   std::string parse_var(const std::string &var);
   void parse_lib(const std::string &line);
   void parse_target_settings(const std::string &line);
+  void parse_type(const std::string &line);
 
   void parse(const std::string &path);
   void check_for_empty_var();
@@ -41,6 +42,7 @@ private:
   std::unordered_map<std::string, std::string> vtable;
   std::unordered_map<std::string, std::unordered_map<std::string, std::vector<std::string>>> tmp_target_option;
   std::vector<tmpDeps> libs;
+  std::string project_type;
   int current_line = 0;
   size_t pos = 0;
   inline static const char *whitespace = " \t\n\r\f\v";
