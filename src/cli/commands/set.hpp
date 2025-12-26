@@ -6,9 +6,9 @@
 #include <string>
 namespace yacppm {
 inline void set_cxx(int version) {
-  Manifest m = parse_manifest(toml::parse_file("yacppm.toml"));
-  m.set_settings("cpp", std::to_string(version));
-  save_manifest(m, "yacppm.toml");
+  Manifest::instance().parse(toml::parse_file("yacppm.toml"));
+  Manifest::instance().set_settings("cpp", std::to_string(version));
+  Manifest::instance().save("yacppm.toml");
 }
 inline void set_pkg_version(std::string version) {}
 } // namespace yacppm
