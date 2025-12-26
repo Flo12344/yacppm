@@ -11,18 +11,27 @@ class Loggger {
 public:
   template <typename... T> static void err(std::string err, T &&...args) {
     std::string msg = "[ERROR] " + err;
-    fmt::print(fmt::fg(fmt::color::red) | fmt::emphasis::bold,
-               fmt::runtime(msg), std::forward<T>(args)...);
+#ifdef _WIN32
+    fmt::print(fmt::fg(fmt::terminal_color::red) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#else
+    fmt::print(fmt::fg(fmt::color::red) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#endif
   }
   template <typename... T> static void info(std::string info, T &&...args) {
     std::string msg = "[INFO] " + info;
-    fmt::print(fmt::fg(fmt::color::yellow_green) | fmt::emphasis::bold,
-               fmt::runtime(msg), std::forward<T>(args)...);
+#ifdef _WIN32
+    fmt::print(fmt::fg(fmt::terminal_color::green) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#else
+    fmt::print(fmt::fg(fmt::color::yellow_green) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#endif
   }
   template <typename... T> static void verbose(std::string info, T &&...args) {
     std::string msg = "[INFO] " + info;
-    fmt::print(fmt::fg(fmt::color::white) | fmt::emphasis::bold,
-               fmt::runtime(msg), std::forward<T>(args)...);
+#ifdef _WIN32
+    fmt::print(fmt::fg(fmt::terminal_color::white) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#else
+    fmt::print(fmt::fg(fmt::color::white) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#endif
   }
 };
 struct ProgressBar {
@@ -34,11 +43,9 @@ struct ProgressBar {
   std::string render() const {
     float progress = current / (float)total;
     int filled = static_cast<int>(progress * width);
-    std::string bar =
-        "[" + std::string(filled, '=') + std::string(width - filled, ' ') + "]";
+    std::string bar = "[" + std::string(filled, '=') + std::string(width - filled, ' ') + "]";
     int pct = static_cast<int>(progress * 100);
-    return label + " " + bar + " " + std::to_string(pct) +
-           "%                        ";
+    return label + " " + bar + " " + std::to_string(pct) + "%                        ";
   }
 
   void set_progress(int value) { current = value; }
@@ -59,8 +66,7 @@ public:
 
   int create(const std::string &label, int total, int width = 40) {
 
-    bars.emplace_back(std::make_shared<ProgressBar>(
-        ProgressBar{.label = label, .total = total, .width = width}));
+    bars.emplace_back(std::make_shared<ProgressBar>(ProgressBar{.label = label, .total = total, .width = width}));
     return bars.size() - 1;
   }
 
