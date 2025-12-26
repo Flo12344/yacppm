@@ -137,7 +137,7 @@ void yacppm::ISL_Getter::build_deps() {
       already_built = true;
     }
 
-    current_repo = rep->first + "/" + rep->second;
+    current_repo = rep->second;
     if (!already_built)
       switch (pkg_type(dep.second.type)) {
       case CMAKE: {
@@ -200,8 +200,15 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
     }
-    if (std::filesystem::exists("toolchain.cmake")) {
-      cmd += CmakeGenerator::get_windows_args(Builder::instance().arch);
+    if (Constant::get_current_os() != Builder::instance().target) {
+      if (Constant::get_current_os() == "linux" && Builder::instance().target == "windows") {
+        cmd += CmakeGenerator::get_windows_args(Builder::instance().arch);
+      } else {
+        throw std::invalid_argument("Currently not supported");
+      }
+      // WARN: will be needed when adding lib options
+      // if (Manifest::instance().get_deps()[current_repo].settings.contains("cross_libs")) {
+      // }
     }
     cmd += "2>&1";
     run_command(cmd);

@@ -41,9 +41,6 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Debug\")\n";
   }
 
-  add_if_extra_build(target, "libs");
-  add_if_extra_build(extended_target, "libs");
-
   if (package.settings.contains("cpp")) {
     cmake_file << "set(CMAKE_CXX_STANDARD " << package.settings.at("cpp") << ")\n";
     cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
@@ -70,11 +67,8 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   for (const auto &lib : isl.libs_names) {
     cmake_file << lib << "\n";
   }
-  if (package.build_extra_options.contains(target) && package.build_extra_options[target].contains("cross_libs")) {
-    for (const auto &lib : package.build_extra_options[target]["cross_libs"]) {
-      cmake_file << lib << "\n";
-    }
-  }
+  add_if_extra_build(target, "cross_libs");
+  add_if_extra_build(extended_target, "cross_libs");
 
   add_if_extra_build(target, "libs");
   add_if_extra_build(extended_target, "libs");
@@ -130,7 +124,7 @@ void yacppm::CmakeGenerator::gen_windows_toolchain(const std::string &architectu
 }
 std::string yacppm::CmakeGenerator::get_windows_args(const std::string &architecture) {
   std::ostringstream out;
-  out << "-DCMAKE_SYSTEM_NAME=Windows";
+  out << "-DCMAKE_SYSTEM_NAME=Windows ";
   if (architecture == "x86_64" || architecture == "x64") {
     out << "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ ";

@@ -21,8 +21,7 @@ private:
   std::optional<CLI_Argument> consume();
   bool check(bool dash, std::string name = "", int offset = 0);
   std::optional<CLI_Argument> next(int offset = 0);
-  CLI_Argument expect(bool dash, const std::string &name = "",
-                      const std::string &type = "");
+  CLI_Argument expect(bool dash, const std::string &name = "", const std::string &type = "");
   void check_command();
 };
 
