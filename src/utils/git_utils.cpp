@@ -2,6 +2,7 @@
 #include "git2/global.h"
 #include "git2/repository.h"
 #include "logger.hpp"
+#include <fstream>
 
 void yacppm::git::git_print_error(const std::string &msg) {
   const git_error *e = git_error_last();
@@ -130,5 +131,59 @@ void yacppm::git::init_git_project(const std::string &path) {
   git_libgit2_init();
   Repository repo;
   git_repository_init(&repo.ptr, path.c_str(), false);
+
+  std::fstream out(path + "/.gitignore", std::ios::out);
+  out <<
+      R"(# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# debug information files
+*.dwo
+*.github
+*.devcontainer
+*.vscode
+
+build/
+.cache/
+compile_commands.json
+CmakeFiles.txt
+)";
+  out.close();
   git_libgit2_shutdown();
 }
