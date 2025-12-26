@@ -94,7 +94,7 @@ void yacppm::TemplateManager::parse(const std::string &path) {
   std::ifstream file(path);
   std::string line;
   while (getline(file, line)) {
-    if (line.empty()) {
+    if (line.empty() || line.starts_with("//")) {
       current_line++;
       continue;
     }

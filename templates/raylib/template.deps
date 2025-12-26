@@ -1,3 +1,4 @@
-cmake https://github.com/raysan5/raylib.git 5.5
+var version = 5.5
+cmake https://github.com/raysan5/raylib.git {version}
 
-target.windows.lib "winmm"
+target.windows.lib winmm
