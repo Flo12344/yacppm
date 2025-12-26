@@ -1,7 +1,11 @@
 // still a lot of thinking on how to handle the multiple build setup
-var api
-var version
+var api= compile_commands.json
+var version= godot-4.5-stable
 
 type shared
 
-cmake https://github.com/godotengine/godot-cpp/tree/master {version} -build_opt={api}
+// [lib-type]                   [repo]                            [version]  [lib-build-option]
+//     v                          v                                   v             v
+//   cmake   https://github.com/godotengine/godot-cpp/tree/master {version}  custom_api_file={api}
+
+cmake https://github.com/godotengine/godot-cpp/tree/master {version} custom_api_file={api}

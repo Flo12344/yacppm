@@ -56,11 +56,11 @@ struct Repository {
 };
 
 void git_print_error(const std::string &msg = "libgit2 error");
-std::optional<git_oid> resolve_to_commit_oid(git_repository *repo,
-                                             const std::string &refspec);
+std::optional<git_oid> resolve_to_commit_oid(git_repository *repo, const std::string &refspec);
 void switch_to_commit(git_repository *repo, const git_oid &commit_oid);
 void switch_to(git_repository *repo, const std::string &refspec);
 void checkout_default_branch(git_repository *repo);
+void init_git_project(const std::string &path);
 } // namespace git
 
 } // namespace yacppm

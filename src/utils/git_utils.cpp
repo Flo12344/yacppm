@@ -1,13 +1,13 @@
 #include "git_utils.hpp"
+#include "git2/global.h"
+#include "git2/repository.h"
 #include "logger.hpp"
 
 void yacppm::git::git_print_error(const std::string &msg) {
   const git_error *e = git_error_last();
   throw GitError(msg + (e ? (": " + std::string(e->message)) : ""));
 }
-std::optional<git_oid>
-yacppm::git::resolve_to_commit_oid(git_repository *repo,
-                                   const std::string &refspec) {
+std::optional<git_oid> yacppm::git::resolve_to_commit_oid(git_repository *repo, const std::string &refspec) {
 
   Obj obj;
   if (git_revparse_single(&obj.ptr, repo, refspec.c_str()) < 0) {
@@ -16,8 +16,7 @@ yacppm::git::resolve_to_commit_oid(git_repository *repo,
   }
 
   Commit commit;
-  if (git_object_peel((git_object **)&commit.ptr, obj.ptr, GIT_OBJECT_COMMIT) <
-      0) {
+  if (git_object_peel((git_object **)&commit.ptr, obj.ptr, GIT_OBJECT_COMMIT) < 0) {
     git_print_error("'" + refspec + "' does not point to a commit");
     return std::nullopt;
   }
@@ -26,8 +25,7 @@ yacppm::git::resolve_to_commit_oid(git_repository *repo,
 
   return oid;
 }
-void yacppm::git::switch_to_commit(git_repository *repo,
-                                   const git_oid &commit_oid) {
+void yacppm::git::switch_to_commit(git_repository *repo, const git_oid &commit_oid) {
   Commit commit;
   if (git_commit_lookup(&commit.ptr, repo, &commit_oid) < 0) {
     git_print_error("Commit lookup failed");
@@ -71,8 +69,7 @@ void yacppm::git::checkout_default_branch(git_repository *repo) {
 
   const char *remote_name = remotes.arr.strings[0];
 
-  std::string remote_head =
-      std::string("refs/remotes/") + remote_name + "/HEAD";
+  std::string remote_head = std::string("refs/remotes/") + remote_name + "/HEAD";
 
   Ref sym;
   if (git_reference_lookup(&sym.ptr, repo, remote_head.c_str()) < 0) {
@@ -95,8 +92,7 @@ void yacppm::git::checkout_default_branch(git_repository *repo) {
   std::string branch = resolved_name + prefix.size();
 
   Ref local;
-  int error =
-      git_branch_lookup(&local.ptr, repo, branch.c_str(), GIT_BRANCH_LOCAL);
+  int error = git_branch_lookup(&local.ptr, repo, branch.c_str(), GIT_BRANCH_LOCAL);
   if (error == GIT_ENOTFOUND) {
     Ref remote_ref;
     if (git_reference_lookup(&remote_ref.ptr, repo, resolved_name) < 0) {
@@ -128,4 +124,11 @@ void yacppm::git::checkout_default_branch(git_repository *repo) {
     return;
   }
   return;
+}
+
+void yacppm::git::init_git_project(const std::string &path) {
+  git_libgit2_init();
+  Repository repo;
+  git_repository_init(&repo.ptr, path.c_str(), false);
+  git_libgit2_shutdown();
 }

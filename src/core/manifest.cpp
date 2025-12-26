@@ -16,7 +16,7 @@ void Manifest::add_dep(const std::string &repo, const std::string &version, cons
   if (!repo_info) {
     throw std::runtime_error(fmt::format("failed to add: {}", repo));
   }
-  Loggger::info("Added to project: {} -> {}", repo, checked);
+  Loggger::info("Added {} to project", repo);
 
   dependencies.insert_or_assign(repo_info->second, Dependency{version, type, checked, settings});
 }
