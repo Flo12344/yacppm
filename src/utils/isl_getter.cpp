@@ -7,7 +7,9 @@
 #include "utils/command_helper.hpp"
 #include "utils/constant.hpp"
 #include "utils/git_utils.hpp"
+#include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <stdexcept>
 
 using namespace yacppm;
@@ -114,7 +116,6 @@ void yacppm::ISL_Getter::build_deps() {
       ProgressBarManager::instance().create("Building libs :", m.get_deps().size()));
 
   int count = 0;
-  count = 0;
   for (auto &dep : m.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
       local_libs.push_back({dep.first, dep.second.version});
@@ -167,18 +168,31 @@ void yacppm::ISL_Getter::retrieve_deps() {
 
   Manifest &m = Manifest::instance();
   std::shared_ptr<ProgressBar> lib_get_bar = ProgressBarManager::instance().get_bar(
-      ProgressBarManager::instance().create("Getting libs :", m.get_deps().size()));
+      ProgressBarManager::instance().create("Fetching libs :", m.get_deps().size()));
+
   int count = 0;
   git_libgit2_init();
+
+  auto get_progress = [](const char *path, size_t cur, size_t tot, void *payload) {
+    ProgressBarManager::instance().get_last_bar()->set_total(tot);
+    ProgressBarManager::instance().get_last_bar()->set_progress(cur);
+    ProgressBarManager::instance().render();
+  };
+  git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
+  clone_opts.checkout_opts.progress_cb = get_progress;
+
   for (auto &dep : m.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB)
       continue;
 
     auto rep = git::get_user_repo(dep.second.git);
     if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" + rep->second)) {
+      std::shared_ptr<ProgressBar> checkout_bar =
+          ProgressBarManager::instance().get_bar(ProgressBarManager::instance().create("Checkout", 0));
+      checkout_bar->set_label(rep->first + "/" + rep->second);
       git::Repository repo;
       git_clone(&repo.ptr, dep.second.git.c_str(), (cache_dir + "/git/" + rep->first + "_" + rep->second).c_str(),
-                NULL);
+                &clone_opts);
     }
 
     git::Repository repo;
@@ -189,6 +203,8 @@ void yacppm::ISL_Getter::retrieve_deps() {
     } else {
       git::switch_to(repo.ptr, dep.second.version);
     }
+    count++;
+    lib_get_bar->set_progress(count);
   }
 
   git_libgit2_shutdown();
@@ -249,6 +265,10 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
   if (std::filesystem::exists(include_file_path)) {
     std::filesystem::copy(include_file_path, lib_file_path + "/include", opt);
   }
+
+  // remove build dir to avoid issue when cross building
+  if (std::filesystem::exists(git_file_path + "/build/"))
+    std::filesystem::remove(git_file_path + "/build/");
 }
 
 void yacppm::ISL_Getter::build_header(std::string git_file_path, std::string lib_file_path) {
