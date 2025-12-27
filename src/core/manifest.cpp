@@ -1,4 +1,6 @@
 #include "manifest.hpp"
+#include "fmt/color.h"
+#include "utils/logger.hpp"
 #include <unordered_map>
 #include <vector>
 
@@ -9,6 +11,7 @@ void Manifest::add_dep(const std::string &repo, const std::string &version, cons
 
   if (type == "llib") {
     dependencies.insert_or_assign(repo, Dependency{version, type, "", settings});
+    Loggger::print_indent(2, "Adding", " {} {} to dependencies", repo, version);
     return;
   }
   std::string checked = git::get_git_link(repo);
@@ -16,7 +19,7 @@ void Manifest::add_dep(const std::string &repo, const std::string &version, cons
   if (!repo_info) {
     throw std::runtime_error(fmt::format("failed to add: {}", repo));
   }
-  Loggger::info("Added {} to project", repo);
+  Loggger::print_indent(2, "Adding", " {} {} to dependencies", repo, version);
 
   dependencies.insert_or_assign(repo_info->second, Dependency{version, type, checked, settings});
 }

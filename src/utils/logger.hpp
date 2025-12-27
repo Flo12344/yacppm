@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include <fmt/base.h>
 #include <fmt/color.h>
 #include <iostream>
@@ -18,11 +19,10 @@ public:
 #endif
   }
   template <typename... T> static void info(std::string info, T &&...args) {
-    std::string msg = "[INFO] " + info;
 #ifdef _WIN32
-    fmt::print(fmt::fg(fmt::terminal_color::green) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+    fmt::print(fmt::fg(fmt::terminal_color::green) | fmt::emphasis::bold, fmt::runtime(info), std::forward<T>(args)...);
 #else
-    fmt::print(fmt::fg(fmt::color::yellow_green) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+    fmt::print(fmt::fg(fmt::color::yellow_green) | fmt::emphasis::bold, fmt::runtime(info), std::forward<T>(args)...);
 #endif
   }
   template <typename... T> static void verbose(std::string info, T &&...args) {
@@ -33,6 +33,22 @@ public:
     fmt::print(fmt::fg(fmt::color::white) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
 #endif
   }
+
+  template <typename... T>
+  static void print_indent(int indent, const std::string &colored, const std::string &text, T &&...args) {
+    std::string sindent;
+    for (int i = 0; i < indent; i++) {
+      sindent += ' ';
+    }
+    sindent += colored + ' ';
+    fmt::print(fmt::fg(current_color), fmt::runtime(sindent));
+    fmt::print(fmt::runtime(text + "\n"), std::forward<T>(args)...);
+  }
+
+  static void set_print_color(fmt::detail::color_type color) { current_color = color; }
+
+private:
+  inline static fmt::detail::color_type current_color = fmt::terminal_color::green;
 };
 struct ProgressBar {
   std::string label;
@@ -45,7 +61,7 @@ struct ProgressBar {
     int filled = static_cast<int>(progress * width);
     std::string bar = "[" + std::string(filled, '=') + std::string(width - filled, ' ') + "]";
     int pct = static_cast<int>(progress * 100);
-    return label + " " + bar + " " + std::to_string(pct) + "%                        ";
+    return label + " " + bar + " " + std::to_string(pct) + "%";
   }
 
   void set_progress(int value) { current = value; }
@@ -80,6 +96,7 @@ public:
   }
 
   std::shared_ptr<ProgressBar> get_bar(int id) { return bars.at(id); }
+  std::shared_ptr<ProgressBar> get_last_bar() { return bars.back(); }
 
   ~ProgressBarManager() { std::cout << "\033[?25h"; }
 };
