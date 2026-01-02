@@ -146,6 +146,6 @@ toml::table Manifest::to_table() {
 }
 
 void Manifest::save(const std::string &path) {
-  std::ofstream out(path + "/yacppm.toml");
+  std::ofstream out(path + (path.empty() ? "" : "/") + "yacppm.toml");
   out << to_table();
 }
