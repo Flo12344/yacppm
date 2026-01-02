@@ -7,7 +7,7 @@
 namespace yacppm {
 inline void run(bool is_release) {
   Manifest::instance().parse(toml::parse_file("yacppm.toml"));
-  build(is_release);
+  build(is_release, false);
   run_command("cd build/" + Constant::get_current_os() + "/bin/ && ./" + Manifest::instance().get_info().name);
 }
 } // namespace yacppm

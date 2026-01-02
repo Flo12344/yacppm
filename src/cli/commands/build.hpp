@@ -10,7 +10,7 @@
 #include <toml++/toml.hpp>
 namespace yacppm {
 
-inline void build(bool is_release, std::string target = "", std::string arch = "") {
+inline void build(bool is_release, bool clean, std::string target = "", std::string arch = "") {
   if (!std::filesystem::exists("yacppm.toml")) {
     throw std::runtime_error("Failed, not in a yacppm Project");
   }
@@ -31,7 +31,7 @@ inline void build(bool is_release, std::string target = "", std::string arch = "
 
   Manifest::instance().parse(toml::parse_file("yacppm.toml"));
 
-  Builder::instance().setup(target, arch, is_release);
+  Builder::instance().setup(target, arch, is_release, clean);
   Builder::instance().build();
 
   std::filesystem::copy_options opt =

@@ -37,7 +37,7 @@ public:
     return inst;
   }
 
-  void setup(std::string target, std::string arch, bool is_release) {
+  void setup(std::string target, std::string arch, bool is_release, bool clean) {
 
     if (target != Constant::get_current_os()) {
       if (target == "windows") {
@@ -51,6 +51,7 @@ public:
     this->is_release = is_release;
     this->target = target;
     this->arch = arch;
+    this->clean = clean;
 
     CmakeGenerator::gen_build_cmake();
   }
@@ -61,14 +62,15 @@ public:
     }
 
     cmd += " 2>&1";
-    run_command(cmd);
+    run_cmake(cmd);
 
     cmd = "cmake --build build/" + target + " 2>&1";
-    run_command(cmd);
+    run_cmake(cmd);
   }
 
   std::string target = "";
   std::string arch = "";
   bool is_release = false;
+  bool clean = false;
 };
 } // namespace yacppm
