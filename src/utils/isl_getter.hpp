@@ -1,5 +1,7 @@
 #pragma once
 
+#include "barkeep.h"
+#include <cstddef>
 #include <git2/checkout.h>
 #include <git2/clone.h>
 #include <git2/common.h>
@@ -11,6 +13,7 @@
 #include <git2/revparse.h>
 #include <git2/tag.h>
 #include <git2/types.h>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -39,6 +42,13 @@ public:
   std::vector<std::string> libs_include_paths;
   std::vector<std::string> sources;
   std::vector<std::pair<std::string, std::string>> local_libs;
+
+  std::vector<std::shared_ptr<barkeep::BaseDisplay>> bars = {};
+  std::unordered_map<std::string, int> bars_progress = {};
+  size_t global_progress = 0;
+  std::shared_ptr<barkeep::StatusDisplay> main_status;
+  std::shared_ptr<barkeep::CompositeDisplay> main_comp;
+  std::shared_ptr<barkeep::CompositeDisplay> bars_comp;
 
 private:
   std::string current_repo;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "barkeep.h"
 #include <cstdio>
 #include <fmt/base.h>
 #include <fmt/color.h>
@@ -50,27 +51,10 @@ public:
 private:
   inline static fmt::detail::color_type current_color = fmt::terminal_color::green;
 };
-struct ProgressBar {
-  std::string label;
-  int total = 0;
-  int current = 0;
-  int width = 0;
-
-  std::string render() const {
-    float progress = current / (float)total;
-    int filled = static_cast<int>(progress * width);
-    std::string bar = "[" + std::string(filled, '=') + std::string(width - filled, ' ') + "]";
-    int pct = static_cast<int>(progress * 100);
-    return label + " " + bar + " " + std::to_string(pct) + "%";
-  }
-
-  void set_progress(int value) { current = value; }
-  void set_label(std::string value) { label = value; }
-  void set_total(int value) { total = value; }
-};
 class ProgressBarManager {
 private:
-  std::vector<std::shared_ptr<ProgressBar>> bars;
+  std::vector<std::shared_ptr<barkeep::BaseDisplay>> bars{};
+  std::shared_ptr<barkeep::CompositeDisplay> bar_comp;
 
   ProgressBarManager() = default;
 
@@ -80,23 +64,9 @@ public:
     return inst;
   }
 
-  int create(const std::string &label, int total, int width = 40) {
-
-    bars.emplace_back(std::make_shared<ProgressBar>(ProgressBar{.label = label, .total = total, .width = width}));
-    return bars.size() - 1;
+  void init() { bar_comp = barkeep::Composite(bars, "\n"); }
+  void add(std::shared_ptr<barkeep::BaseDisplay> display) {
+    bars.push_back(display);
+    bar_comp = barkeep::Composite(bars, "\n");
   }
-
-  void render() {
-    std::cout << "\033[?25l";                   // hide cursor
-    std::cout << "\033[" << bars.size() << "A"; // move up
-    for (auto &bar : bars) {
-      std::cout << bar->render() << "\n";
-    }
-    std::cout.flush();
-  }
-
-  std::shared_ptr<ProgressBar> get_bar(int id) { return bars.at(id); }
-  std::shared_ptr<ProgressBar> get_last_bar() { return bars.back(); }
-
-  ~ProgressBarManager() { std::cout << "\033[?25h"; }
 };

@@ -65,7 +65,7 @@ public:
     run_cmake(cmd);
 
     cmd = "cmake --build build/" + target + " 2>&1";
-    run_cmake(cmd);
+    run_cmake(cmd, true);
   }
 
   std::string target = "";
