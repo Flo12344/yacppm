@@ -5,6 +5,7 @@
 #include <array>
 #include <cctype>
 #include <filesystem>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -26,75 +27,18 @@
 #endif
 
 namespace yacppm {
-inline void run_command(const std::string &command) {
+inline void run_command(const std::string &command, std::function<void(std::string)> func = nullptr) {
   std::array<char, 256> buf;
   std::unique_ptr<FILE, int (*)(FILE *)> pipe(POPEN(command.c_str(), "r"), PCLOSE);
   if (!pipe) {
     throw std::runtime_error("popen failed!");
   }
 
-  // TODO: Parse cmake outputs
   while (fgets(buf.data(), buf.size(), pipe.get()) != nullptr) {
-    Loggger::verbose("{}", buf.data());
-  }
-}
-
-inline void run_cmake(const std::string &command, bool is_build = false) {
-  std::array<char, 256> buf;
-  std::unique_ptr<FILE, int (*)(FILE *)> pipe(POPEN(command.c_str(), "r"), PCLOSE);
-  if (!pipe) {
-    throw std::runtime_error("popen failed!");
-  }
-
-  // TODO: Parse cmake outputs
-  static const std::regex percentage(R"(\[ {0,2}[0-9]{1,3}%\])");
-  int progress = 0;
-  // auto bar = barkeep::ProgressBar(&progress, {
-  //                                                .speed = std::nullopt,
-  //                                                .style = barkeep::ProgressBarStyle::Rich,
-  //                                                .show = false,
-  //                                            });
-
-  // indicators::BlockProgressBar progress{
-  //     indicators::option::BarWidth{50},
-  //     indicators::option::Start{"Building ["},
-  //     indicators::option::End{"]"},
-  //     indicators::option::ForegroundColor{indicators::Color::white},
-  //     indicators::option::ShowPercentage{true},
-  //     indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}};
-  // if (is_build) {
-  //   progress.set_progress(0);
-  // }
-  //
-  // indicators::ProgressSpinner spinner{
-  //     indicators::option::PostfixText{"Setting-up cmake"},
-  //     indicators::option::ForegroundColor{indicators::Color::yellow}, indicators::option::ShowPercentage{false},
-  //     indicators::option::SpinnerStates{std::vector<std::string>{"⠈", "⠐", "⠠", "⢀", "⡀", "⠄", "⠂", "⠁"}},
-  //     indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}};
-
-  std::smatch m;
-  while (fgets(buf.data(), buf.size(), pipe.get()) != nullptr) {
-    // Loggger::verbose("{}", buf.data());
     std::string sbuf = buf.data();
-    if (sbuf.starts_with("--")) {
-      // spinner.set_option(indicators::option::PostfixText{sbuf.substr(3)});
-      // spinner.tick();
-      // Loggger::info("{}\n", sbuf);
-    } else
-      // get percent
-      if (is_build && std::regex_search(sbuf, m, percentage)) {
-        auto str = m.str();
-        // Loggger::info("{}\n", str.substr(1, str.size() - 3));
-        // progress.set_progress(std::stoi(str.substr(1, str.size() - 3)));
-        // if (!bar->running())
-        // bar->show();
-        progress = (std::stoi(str.substr(1, str.size() - 3)));
-        // Loggger::info("{}\n", sbuf);
-      } else {
-        // Loggger::info("{}\n", sbuf);
-      }
+    if (func)
+      func(sbuf);
   }
-  // bar->done();
 }
 
 inline std::string to_camel_case(const std::string &convert) {

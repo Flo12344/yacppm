@@ -56,16 +56,17 @@ public:
     CmakeGenerator::gen_build_cmake();
   }
   void build() {
+    int progress = 0;
     std::string cmd = "cmake -S . -B build/" + target + " ";
     if (target != Constant::get_current_os()) {
       cmd += "-DCMAKE_TOOLCHAIN_FILE=toolchain.cmake";
     }
 
     cmd += " 2>&1";
-    run_cmake(cmd);
+    run_command(cmd);
 
     cmd = "cmake --build build/" + target + " 2>&1";
-    run_cmake(cmd, true);
+    run_command(cmd);
   }
 
   std::string target = "";

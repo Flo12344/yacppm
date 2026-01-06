@@ -43,14 +43,15 @@ public:
   std::vector<std::string> sources;
   std::vector<std::pair<std::string, std::string>> local_libs;
 
-  std::vector<std::shared_ptr<barkeep::BaseDisplay>> bars = {};
-  std::unordered_map<std::string, int> bars_progress = {};
-  size_t global_progress = 0;
-  std::shared_ptr<barkeep::StatusDisplay> main_status;
-  std::shared_ptr<barkeep::CompositeDisplay> main_comp;
-  std::shared_ptr<barkeep::CompositeDisplay> bars_comp;
-
 private:
   std::string current_repo;
+  static inline std::string repo_key;
+
+  std::shared_ptr<barkeep::CompositeDisplay> main_comp;
+  std::shared_ptr<barkeep::CompositeDisplay> bars_comp;
+  std::shared_ptr<barkeep::StatusDisplay> main_status;
+  std::vector<std::shared_ptr<barkeep::BaseDisplay>> bars = {};
+  static inline std::unordered_map<std::string, int> bars_progress = {};
+  size_t global_progress = 0;
 };
 } // namespace yacppm
