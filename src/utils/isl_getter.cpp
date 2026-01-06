@@ -1,4 +1,5 @@
 #include "isl_getter.hpp"
+
 #include "barkeep.h"
 #include "core/builder.hpp"
 #include "core/manifest.hpp"
@@ -138,13 +139,14 @@ void yacppm::ISL_Getter::create_bars() {
     auto key = rep->first + "/" + rep->second;
     bars_progress[key] = 0;
 
-    auto bar = barkeep::ProgressBar(&bars_progress[key], {
-                                                             .total = 100,
-                                                             .message = "   " + key,
-                                                             .speed = std::nullopt,
-                                                             .style = barkeep::ProgressBarStyle::Rich,
-                                                             .show = false,
-                                                         });
+    auto bar =
+        barkeep::ProgressBar(&bars_progress[key], {
+                                                      .total = 100,
+                                                      .format = "   " + key + " {cyan}{percent:.2f}%{reset} {bar}",
+                                                      .speed = std::nullopt,
+                                                      .style = barkeep::ProgressBarStyle::Rich,
+                                                      .show = false,
+                                                  });
     bars.push_back(bar);
   }
   main_comp = barkeep::Composite({main_status, lib_build_bar}, " ");
@@ -178,10 +180,10 @@ void yacppm::ISL_Getter::retrieve_deps() {
     std::filesystem::create_directory(cache_dir + "/libs");
 
   create_bars();
-  main_status->message("Fetching deps");
+  main_status->message("Fetching/Checkout deps");
 
   git_libgit2_init();
-  auto get_progress = [](const char *path, size_t cur, size_t tot, void *payload) {
+  auto checkout_progress = [](const char *path, size_t cur, size_t tot, void *payload) {
     bars_progress[current_repo_key] = cur / (float)tot * 100;
   };
   auto fetch_progress = [](const git_indexer_progress *stats, void *payload) -> int {
@@ -189,7 +191,7 @@ void yacppm::ISL_Getter::retrieve_deps() {
     return 0;
   };
   git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
-  clone_opts.checkout_opts.progress_cb = get_progress;
+  clone_opts.checkout_opts.progress_cb = checkout_progress;
   clone_opts.fetch_opts.callbacks.transfer_progress = fetch_progress;
 
   for (auto &dep : Manifest::instance().get_deps()) {
@@ -200,8 +202,6 @@ void yacppm::ISL_Getter::retrieve_deps() {
     current_repo_key = rep->first + "/" + rep->second;
 
     if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" + rep->second)) {
-      // INFO: Checkout label
-      //
       git::Repository repo;
       git_clone(&repo.ptr, dep.second.git.c_str(), (cache_dir + "/git/" + rep->first + "_" + rep->second).c_str(),
                 &clone_opts);
