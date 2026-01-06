@@ -27,6 +27,8 @@
 #endif
 
 namespace yacppm {
+// @param command : command to execute
+// @param func : function to use to process command output
 inline void run_command(const std::string &command, std::function<void(std::string)> func = nullptr) {
   std::array<char, 256> buf;
   std::unique_ptr<FILE, int (*)(FILE *)> pipe(POPEN(command.c_str(), "r"), PCLOSE);

@@ -31,6 +31,9 @@ class ISL_Getter {
   void build_header(std::string git_file_path, std::string lib_file_path);
   void header_isl(std::string lib_file_path);
 
+  void create_bars();
+  void reset_bars();
+
 public:
   void retrieve_deps();
   void build_deps();
@@ -45,7 +48,7 @@ public:
 
 private:
   std::string current_repo;
-  static inline std::string repo_key;
+  static inline std::string current_repo_key;
 
   std::shared_ptr<barkeep::CompositeDisplay> main_comp;
   std::shared_ptr<barkeep::CompositeDisplay> bars_comp;
