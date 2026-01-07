@@ -1,10 +1,16 @@
 <h1 align="center">YACPPM</h1>
-<h4 align="center"><i>Yet Another C++ Package Manager</i></h4>
+<h4 align="center"><i>Yet Another C++ Manager</i></h4>
 
 > [!WARNING]
 > This project is a work-in-progress (WIP).\
 > Expect breaking changes, missing features, and rough edges.\
 > Not recommended for production use.
+
+<p align="center">
+  <picture>
+    <img src="yacppm.png">
+  </picture>
+</p>
 
 ## Project Description
 
@@ -31,7 +37,7 @@ I'm making it mainly to experiment with automating build setup and also to simpl
 ## Current Commands
 
 ### `yacppm new <project_name> [options]`
-Creates a new C++ project (currently only executables).
+Creates a new C++ project (executables by default).
 
 | Option       | Description                        | Example                          |
 |--------------|------------------------------------|----------------------------------|
