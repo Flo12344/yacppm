@@ -75,9 +75,9 @@ void yacppm::Builder::build() {
     // Loggger::info("{}", s);
   });
   if (error_found) {
-    Loggger::err("Failed to build {}", Manifest::instance().get_info().name);
+    Loggger::err("Failed to build {}\n", Manifest::instance().get_info().name);
   } else {
-    Loggger::info("Built {} Successfully", Manifest::instance().get_info().name);
+    Loggger::info("Built {} Successfully\n", Manifest::instance().get_info().name);
   }
 }
 
