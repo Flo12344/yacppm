@@ -1,51 +1,67 @@
 <h1 align="center">YACPPM</h1>
+<h4 align="center"><i>Yet Another C++ Package Manager</i></h4>
 
-> [!CAUTION]
-> This project is a WIP so expect many changes
+> [!WARNING]
+> This project is a work-in-progress (WIP).\
+> Expect breaking changes, missing features, and rough edges.\
+> Not recommended for production use.
+
 ## Project Description
 
-YACPPM (Yet Another C++ Manager) is a simple c++ project manager 
-
+YACPPM (Yet Another C++ Manager) is an experimental simple C++ project and package manager,
 Inspired by [Cabin](https://github.com/cabinpkg/cabin) and Cargo.
 
 ## Why
-I'm making it mainly to experiment with managing build setup and also to simplify the build process for my projects hopefully ^^
+I'm making it mainly to experiment with automating build setup and also to simplify the build process for my projects hopefully ^^
 
 ## Current goals
-- Self-host YACPPM
-- project template system
-- build Release/Debug options
-- Cross-compilation support
+- [x] Basic project scaffolding (`new`, `add`, `build`, `run`)
+- [x] Support for header-only and CMake-based dependencies
+- [x] Local caching of dependencies
+- [x] Self-host YACPPM
+- [ ] project template system (partial)
+- [ ] build Release/Debug options (partial)
+- [ ] Cross-compilation support (partial)
+- [ ] Add more build system compatibility
+- [ ] Finish command impl
+- [ ] Add auto lib type check
+- [ ] Make all options useable through cli
 
-## Current commands
-- yacppm new <project_name> <option> (currently only executables)
 
-| Option          | Description                          | Example|
-|---|---|---|
-| -template        | use selected template for the project| yacppm new project -template=raylib |
+## Current Commands
 
-- yacppm add <type> <git_repo> <version> (header_only)
+### `yacppm new <project_name> [options]`
+Creates a new C++ project (currently only executables).
 
-| Type          | Description                      |
-|---|---|
-| -h            |header-only lib                   |
-| -c            | cmake lib                        |
-| -llib         | local lib                        |
+| Option       | Description                        | Example                          |
+|--------------|------------------------------------|----------------------------------|
+| `-template=` | Use a named project template       | `yacppm new game -template=raylib` |
 
-- yacppm add <git_repo> <version> (not implemented yet but would try to get the type based on files)
-- yacppm build \<target> \<arch>
+---
 
-| Target          | Description                      | arch |
-|---|---|---|
-| windows            | build for Windows on linux (only one implemented yet)| x86_64 , i386 |
+### `yacppm add <type> <repo> [version]`
+Adds a dependency to your project.
 
-- yacppm run
-- yacppm remove <git_repo or name> (not implemented yet)
-- yacppm set <option> (header_only)
+| Type     | Description                     |
+|----------|---------------------------------|
+| `-h`     | Header-only library             |
+| `-c`     | CMake-based library             |
+| `-llib`     | Local library (path on disk)    |
 
-| Type          | Description                      |
-|---|---|
-| -cpp            | set c++ version                   |
+### `yacppm build [Release|Debug] [target] [arch]`
+Generates a temporary CMakeLists.txt and builds the project.
+
+
+### `yacppm run [Release|Debug]`
+Same as build but once build finished run if the project is executable
+
+### `yacppm remove <repo|name>` (not implemented yet)
+Remove a dependency from your project.
+
+### `yacppm set <option>`
+| option   | Description                     |
+|----------|---------------------------------|
+| `-cpp`     | Header-only library           |
 
 ### Example
 ```bash
@@ -55,22 +71,24 @@ yacppm add -h https://github.com/user/header_only_repo v1.0.0
 yacppm add -c https://github.com/user/cmake_repo (will default to master branch)
 yacppm build or yacppm run
 ```
+## Cross Platform Build
+Currently, YACPPM can build:
+| From -> To     |                      |
+|----------|---------------------------------|
+| `linux->linux`         | native             |
+| `linux->windows`       | through mingw-w64  |
+| `windows->windows`     | native             |
 
-## How it currently works
-YACPPM store "packages" in a yacppm.toml file with version
-- on new:
-    - create a new project
-- on add:
-    - adds the "packages" to the toml file with the provided type
-- on build:
-    - it get the "packages" using git and if provided checkout the correct version
-    - it then builds each libs acording to the specified type (currently supported header_only/cmake)
-    - each build is then cached with it's version for later builds
-    - and finaly produce a CMakeLists for the project
-    - and builds the project
-- on run:
-    - build the project
-    - and then runs the project
+
+## Platform Support
+
+Currently, YACPPM is developed and tested primarily on:
+
+- **Linux** (main development OS)
+- **Windows** (partialy tested through VM)
+
+Support for:
+- **macOS** – not tested yet, PRs welcome
 
 ## Third-Party
 This project uses the following third-party libraries:
@@ -78,3 +96,7 @@ This project uses the following third-party libraries:
 - [**libgit2**](https://github.com/libgit2/libgit2): Copyright (C) the libgit2 contributors
 
 - [**toml++**](https://github.com/marzer/tomlplusplus): Copyright (c) Mark Gillard
+
+- [**fmt**](https://github.com/fmtlib/fmt): Copyright (c) Victor Zverovich and {fmt} contributors
+
+- [**barkeep**](https://github.com/oir/barkeep/): Copyright (c) Ozan İrsoy
