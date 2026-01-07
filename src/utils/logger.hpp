@@ -19,11 +19,20 @@ public:
     fmt::print(fmt::fg(fmt::color::red) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
 #endif
   }
+  template <typename... T> static void warn(std::string err, T &&...args) {
+    std::string msg = "[WARN] " + err;
+#ifdef _WIN32
+    fmt::print(fmt::fg(fmt::terminal_color::yellow) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
+#else
+    fmt::print(fmt::fg(fmt::color::light_golden_rod_yellow) | fmt::emphasis::bold, fmt::runtime(msg),
+               std::forward<T>(args)...);
+#endif
+  }
   template <typename... T> static void info(std::string info, T &&...args) {
 #ifdef _WIN32
-    fmt::print(fmt::fg(fmt::terminal_color::green) | fmt::emphasis::bold, fmt::runtime(info), std::forward<T>(args)...);
+    fmt::print(fmt::fg(fmt::terminal_color::white) | fmt::emphasis::bold, fmt::runtime(info), std::forward<T>(args)...);
 #else
-    fmt::print(fmt::fg(fmt::color::yellow_green) | fmt::emphasis::bold, fmt::runtime(info), std::forward<T>(args)...);
+    fmt::print(fmt::fg(fmt::color::light_gray) | fmt::emphasis::bold, fmt::runtime(info), std::forward<T>(args)...);
 #endif
   }
   template <typename... T> static void verbose(std::string info, T &&...args) {

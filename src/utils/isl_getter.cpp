@@ -291,12 +291,12 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     cmd = "cmake --build " + git_file_path + "/build 2>&1";
     static const std::regex percentage(R"(\[ {0,2}[0-9]{1,3}%\])");
 
-    auto process = [](std::string sbuf) {
+    auto process = [&](std::string sbuf) {
       std::smatch m;
       if (sbuf.starts_with("--")) {
       } else if (std::regex_search(sbuf, m, percentage)) {
         auto str = m.str();
-        ISL_Getter::bars_progress[ISL_Getter::current_repo_key] = (std::stoi(str.substr(1, str.size() - 3)));
+        bars_progress[current_repo_key] = (std::stoi(str.substr(1, str.size() - 3)));
       } else {
       }
     };

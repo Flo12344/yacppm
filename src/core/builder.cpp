@@ -4,9 +4,12 @@
 #include "manifest.hpp"
 #include "utils/command_helper.hpp"
 #include "utils/constant.hpp"
+#include "utils/logger.hpp"
+#include <algorithm>
 #include <filesystem>
 #include <regex>
 #include <sstream>
+#include <vector>
 
 void yacppm::Builder::build() {
   int progress = 0;
@@ -28,6 +31,7 @@ void yacppm::Builder::build() {
                                       });
   static const std::regex percentage(R"(\[ {0,2}[0-9]{1,3}%\])");
 
+  std::vector<std::string> other;
   auto process = [&](std::string sbuf) {
     std::smatch m;
     if (sbuf.starts_with("--")) {
@@ -35,11 +39,46 @@ void yacppm::Builder::build() {
       auto str = m.str();
       progress = (std::stoi(str.substr(1, str.size() - 3)));
     } else {
+      other.push_back(sbuf);
     }
   };
 
   cmd = "cmake --build build/" + target + " 2>&1";
   run_command(cmd, process);
+  global_bar->done();
+
+  static const std::regex error(R"(: error( [A-Z0-9]+)?:)");
+  static const std::regex warning(R"(: warning( [A-Z0-9]+)?:)");
+  static const std::regex file(R"(([a-zA-Z0-9./\-\(\)\\]+)(\([0-9]+\)|:[0-9]+:))");
+  static bool error_found = false;
+  std::for_each(other.begin(), other.end(), [](const std::string &s) {
+    std::smatch m;
+    std::smatch f;
+    std::string affected;
+    if (s.starts_with("make")) {
+      return;
+    }
+    if (std::regex_search(s, f, file)) {
+      affected = f.str().substr(std::filesystem::current_path().string().size());
+    }
+
+    if (std::regex_search(s, m, error)) {
+      Loggger::err("{}{}", affected, s.substr(m.position() + m.str().size()));
+      error_found = true;
+    } else if (std::regex_search(s, m, warning)) {
+      Loggger::warn("{}{}", affected, s.substr(m.position() + m.str().size()));
+    } else if (!affected.empty()) {
+      Loggger::info("{}{}", affected, s.substr(f.str().size()));
+    } else {
+      Loggger::info("{}", s);
+    }
+    // Loggger::info("{}", s);
+  });
+  if (error_found) {
+    Loggger::err("Failed to build {}", Manifest::instance().get_info().name);
+  } else {
+    Loggger::info("Built {} Successfully", Manifest::instance().get_info().name);
+  }
 }
 
 void yacppm::Builder::setup(std::string target, std::string arch, bool is_release, bool clean) {
