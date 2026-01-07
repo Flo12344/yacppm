@@ -1,5 +1,10 @@
 #pragma once
 
+#ifndef BARKEEP_ENABLE_FMT_FORMAT
+#define BARKEEP_ENABLE_FMT_FORMAT
+#endif
+#include "barkeep.h"
+
 #include <string>
 namespace yacppm {
 class Constant {

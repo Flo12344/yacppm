@@ -1,21 +1,16 @@
 #include "isl_getter.hpp"
 
-#include "barkeep.h"
 #include "core/builder.hpp"
 #include "core/manifest.hpp"
-#include "fmt/color.h"
 #include "generator/cmake_generator.hpp"
-#include "logger.hpp"
 #include "utils/command_helper.hpp"
-#include "utils/constant.hpp"
 #include "utils/git_utils.hpp"
+#include "utils/link_utils.hpp"
 #include <cstddef>
 #include <filesystem>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -270,6 +265,8 @@ void yacppm::ISL_Getter::build_deps() {
 
     global_progress++;
   }
+  main_status->message("Deps Built");
+  main_status->done();
 }
 
 void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_file_path) {

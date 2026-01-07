@@ -1,6 +1,11 @@
 #include "manifest.hpp"
+#include "../utils/link_utils.hpp"
+#include "../utils/logger.hpp"
 #include "fmt/color.h"
 #include "utils/logger.hpp"
+#include <fstream>
+#include <memory>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 

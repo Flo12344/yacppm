@@ -1,10 +1,5 @@
 #pragma once
-
-#ifndef BARKEEP_ENABLE_FMT_FORMAT
-#define BARKEEP_ENABLE_FMT_FORMAT
-#endif
-
-#include "barkeep.h"
+#include "utils/constant.hpp"
 #include <cstddef>
 #include <git2/checkout.h>
 #include <git2/clone.h>
