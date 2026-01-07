@@ -76,8 +76,15 @@ void yacppm::Builder::build() {
   });
   if (error_found) {
     Loggger::err("Failed to build {}\n", Manifest::instance().get_info().name);
+    return;
   } else {
     Loggger::info("Built {} Successfully\n", Manifest::instance().get_info().name);
+  }
+
+  if (std::filesystem::exists("build/" + Constant::get_current_os() + "/compile_commands.json")) {
+    std::filesystem::copy_options opt = std::filesystem::copy_options::overwrite_existing;
+    std::filesystem::copy_file("build/" + Constant::get_current_os() + "/compile_commands.json",
+                               "compile_commands.json", opt);
   }
 }
 
