@@ -1,6 +1,11 @@
 #include "manifest.hpp"
+#include "../utils/link_utils.hpp"
+#include "../utils/logger.hpp"
 #include "fmt/color.h"
 #include "utils/logger.hpp"
+#include <fstream>
+#include <memory>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
@@ -146,6 +151,6 @@ toml::table Manifest::to_table() {
 }
 
 void Manifest::save(const std::string &path) {
-  std::ofstream out(path + "/yacppm.toml");
+  std::ofstream out(path + (path.empty() ? "" : "/") + "yacppm.toml");
   out << to_table();
 }

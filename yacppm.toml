@@ -1,12 +1,12 @@
+[dependencies.barkeep]
+git = 'https://github.com/oir/barkeep.git'
+type = 'header'
+version = 'latest'
+
 [dependencies.fmt]
 git = 'https://github.com/fmtlib/fmt.git'
 type = 'cmake'
 version = '12.1.0'
-
-[dependencies.indicators]
-git = 'https://github.com/p-ranav/indicators.git'
-type = 'header'
-version = 'latest'
 
 [dependencies.libgit2]
 git = 'https://github.com/libgit2/libgit2.git'

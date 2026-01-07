@@ -1,9 +1,8 @@
 #pragma once
-#include "logger.hpp"
-#include <algorithm>
 #include <array>
 #include <cctype>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -22,16 +21,19 @@
 #endif
 
 namespace yacppm {
-inline void run_command(const std::string &command) {
+// @param command : command to execute
+// @param func : function to use to process command output
+inline void run_command(const std::string &command, std::function<void(std::string)> func = nullptr) {
   std::array<char, 256> buf;
   std::unique_ptr<FILE, int (*)(FILE *)> pipe(POPEN(command.c_str(), "r"), PCLOSE);
   if (!pipe) {
     throw std::runtime_error("popen failed!");
   }
 
-  // TODO: Parse cmake outputs
   while (fgets(buf.data(), buf.size(), pipe.get()) != nullptr) {
-    Loggger::verbose("{}", buf.data());
+    std::string sbuf = buf.data();
+    if (func)
+      func(sbuf);
   }
 }
 

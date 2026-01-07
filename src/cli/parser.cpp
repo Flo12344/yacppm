@@ -6,6 +6,7 @@
 #include "commands/run.hpp"
 #include "commands/set.hpp"
 #include "commands/symlink.hpp"
+#include "utils/constant.hpp"
 #include "utils/logger.hpp"
 #include <optional>
 #include <stdexcept>
@@ -65,17 +66,23 @@ void yacppm::Parser::check_command() {
         throw std::invalid_argument(fmt::format("Unknown argument {}", consume()->name));
       }
     }
-    if (check(true, "target")) {
-      std::string target = consume()->value;
-      if (check(true, "arch")) {
-        std::string arch = consume()->value;
-        build(is_release, target, arch);
-      } else {
-        build(is_release, target);
+    std::string target = Constant::get_current_os();
+    std::string arch = Constant::get_current_arch();
+    bool is_clean = false;
+
+    while (pos < args.size()) {
+      if (check(true, "target")) {
+        target = consume()->value;
       }
-    } else {
-      build(is_release);
+      if (check(true, "arch")) {
+        arch = consume()->value;
+      }
+      if (check(true, "clean")) {
+        is_clean = true;
+        consume();
+      }
     }
+    build(is_release, is_clean, target, arch);
     return;
   }
   if (check(false, "add")) {
