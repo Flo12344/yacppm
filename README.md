@@ -24,6 +24,7 @@ I'm making it mainly to experiment with automating build setup and also to simpl
 - [x] Basic project scaffolding (`new`, `add`, `build`, `run`)
 - [x] Support for header-only and CMake-based dependencies
 - [x] Local caching of dependencies
+- [x] Auto Combines ThirdParty Licenses from dependencies
 - [x] Self-host YACPPM
 - [ ] project template system (partial)
 - [ ] build Release/Debug options (partial)
