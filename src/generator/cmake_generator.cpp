@@ -5,8 +5,11 @@
 #include "utils/constant.hpp"
 #include "utils/isl_getter.hpp"
 #include "utils/logger.hpp"
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <string>
 
 void yacppm::CmakeGenerator::gen_build_cmake() {
   ISL_Getter isl;
@@ -99,6 +102,22 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";
 
   cmake_file.close();
+
+  if (isl.licenses.size() == 1) {
+    std::filesystem::copy_file(isl.licenses[0], "build/THIRDPARTY_LICENSES",
+                               std::filesystem::copy_options::overwrite_existing);
+    return;
+  }
+  std::fstream license_file("THIRDPARTY_LICENSES", std::ios::out);
+  for (const auto &l : isl.licenses) {
+    std::ifstream lf(l);
+    std::string line;
+    while (std::getline(lf, line)) {
+      license_file << line << "\n";
+    }
+    lf.close();
+  }
+  license_file.close();
 }
 
 void yacppm::CmakeGenerator::gen_windows_toolchain(const std::string &architecture) {

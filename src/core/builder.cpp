@@ -77,8 +77,6 @@ void yacppm::Builder::build() {
   if (error_found) {
     Loggger::err("Failed to build {}\n", Manifest::instance().get_info().name);
     return;
-  } else {
-    Loggger::info("Built {} Successfully\n", Manifest::instance().get_info().name);
   }
 
   if (std::filesystem::exists("build/" + Constant::get_current_os() + "/compile_commands.json")) {
@@ -86,6 +84,17 @@ void yacppm::Builder::build() {
     std::filesystem::copy_file("build/" + Constant::get_current_os() + "/compile_commands.json",
                                "compile_commands.json", opt);
   }
+  if (std::filesystem::exists("build/THIRDPARTY_LICENSES")) {
+    if (std::filesystem::exists("build/" + Constant::get_current_os() + "/bin"))
+      std::filesystem::copy("build/THIRDPARTY_LICENSES", "build/" + Constant::get_current_os() + "/bin",
+                            std::filesystem::copy_options::overwrite_existing);
+    else
+      std::filesystem::copy("build/THIRDPARTY_LICENSES",
+                            "build/" + Constant::get_current_os() + (is_release ? "Release" : "Debug"),
+                            std::filesystem::copy_options::overwrite_existing);
+  }
+
+  Loggger::info("Built {} Successfully\n", Manifest::instance().get_info().name);
 }
 
 void yacppm::Builder::setup(std::string target, std::string arch, bool is_release, bool clean) {

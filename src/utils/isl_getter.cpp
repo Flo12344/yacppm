@@ -6,6 +6,7 @@
 #include "utils/command_helper.hpp"
 #include "utils/git_utils.hpp"
 #include "utils/link_utils.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <functional>
@@ -83,6 +84,7 @@ std::vector<std::string> yacppm::ISL_Getter::clean_lib_names(const std::vector<s
   return cleaned;
 }
 void yacppm::ISL_Getter::get_project_isl() {
+  current_git_path.clear();
 
   parse_src_folder("src/");
 
@@ -97,12 +99,13 @@ void yacppm::ISL_Getter::get_project_isl() {
     std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
                                 Builder::instance().get_build_hash();
 
+    current_lib_path = lib_file_path;
     switch (pkg_type(dep.second.type)) {
     case CMAKE: {
-      cmake_isl(lib_file_path);
+      cmake_isl();
     } break;
     case HEADER:
-      header_isl(lib_file_path);
+      header_isl();
       break;
     case LLIB:
 
@@ -246,13 +249,16 @@ void yacppm::ISL_Getter::build_deps() {
     }
 
     current_repo = rep->second;
+    current_git_path = git_file_path;
+    current_lib_path = lib_file_path;
+    copy_license();
     if (!already_built && !Builder::instance().clean)
       switch (pkg_type(dep.second.type)) {
       case CMAKE: {
-        build_cmake(git_file_path, lib_file_path);
+        build_cmake();
       } break;
       case HEADER:
-        build_header(git_file_path, lib_file_path);
+        build_header();
       case LLIB:
 
       case PKG_TYPE_MAX:
@@ -269,9 +275,9 @@ void yacppm::ISL_Getter::build_deps() {
   main_status->done();
 }
 
-void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_file_path) {
-  if (std::filesystem::exists(git_file_path + "/CMakeLists.txt")) {
-    std::string cmd = "cmake -S " + git_file_path + "/ -B " + git_file_path + "/build ";
+void yacppm::ISL_Getter::build_cmake() {
+  if (std::filesystem::exists(current_git_path + "/CMakeLists.txt")) {
+    std::string cmd = "cmake -S " + current_git_path + "/ -B " + current_git_path + "/build ";
     if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
     }
@@ -288,7 +294,7 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     cmd += "2>&1";
     run_command(cmd, nullptr);
 
-    cmd = "cmake --build " + git_file_path + "/build 2>&1";
+    cmd = "cmake --build " + current_git_path + "/build 2>&1";
     static const std::regex percentage(R"(\[ {0,2}[0-9]{1,3}%\])");
 
     auto process = [&](std::string sbuf) {
@@ -305,17 +311,17 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     throw std::invalid_argument(fmt::format("Unable to find CMakeLists.txt for : {}", current_repo));
   }
 
-  auto libs = find_libs(git_file_path + "/build");
+  auto libs = find_libs(current_git_path + "/build");
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
   for (const auto &lib : libs) {
-    std::filesystem::copy(git_file_path + "/build/" + lib, lib_file_path, opt);
+    std::filesystem::copy(current_git_path + "/build/" + lib, current_lib_path, opt);
   }
 
-  std::string include_file_path = git_file_path + "/include";
+  std::string include_file_path = current_git_path + "/include";
   if (libs.empty()) {
     std::string _path;
-    for (const auto &entry : std::filesystem::directory_iterator(git_file_path + "/build")) {
+    for (const auto &entry : std::filesystem::directory_iterator(current_git_path + "/build")) {
       if (entry.is_directory() && entry.path().filename() != "CMakeFiles") {
         _path = entry.path().string();
         libs = find_libs(entry.path().string());
@@ -328,59 +334,70 @@ void yacppm::ISL_Getter::build_cmake(std::string git_file_path, std::string lib_
     }
 
     for (const auto &lib : libs) {
-      std::filesystem::copy(_path + "/" + lib, lib_file_path, opt);
+      std::filesystem::copy(_path + "/" + lib, current_lib_path, opt);
     }
   }
 
   if (std::filesystem::exists(include_file_path)) {
-    std::filesystem::copy(include_file_path, lib_file_path + "/include", opt);
+    std::filesystem::copy(include_file_path, current_lib_path + "/include", opt);
   }
 
   // INFO: remove build dir to avoid issue when cross building
-  if (std::filesystem::exists(git_file_path + "/build/"))
-    std::filesystem::remove_all(git_file_path + "/build/");
+  if (std::filesystem::exists(current_git_path + "/build/"))
+    std::filesystem::remove_all(current_git_path + "/build/");
 }
 
-void yacppm::ISL_Getter::build_header(std::string git_file_path, std::string lib_file_path) {
+void yacppm::ISL_Getter::build_header() {
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
 
-  if (std::filesystem::exists(git_file_path + "/single_include")) {
-    std::filesystem::copy(git_file_path + "/single_include", lib_file_path, opt);
-  } else if (std::filesystem::exists(git_file_path + "/include")) {
-    std::filesystem::copy(git_file_path + "/include", lib_file_path, opt);
-  } else if (std::filesystem::exists(git_file_path + "/" + current_repo)) {
-    std::filesystem::copy(git_file_path + "/" + current_repo, lib_file_path, opt);
+  if (std::filesystem::exists(current_git_path + "/single_include")) {
+    std::filesystem::copy(current_git_path + "/single_include", current_lib_path, opt);
+  } else if (std::filesystem::exists(current_git_path + "/include")) {
+    std::filesystem::copy(current_git_path + "/include", current_lib_path, opt);
+  } else if (std::filesystem::exists(current_git_path + "/" + current_repo)) {
+    std::filesystem::copy(current_git_path + "/" + current_repo, current_lib_path, opt);
   } else {
-    for (const auto &entry : std::filesystem::directory_iterator(git_file_path)) {
+    for (const auto &entry : std::filesystem::directory_iterator(current_git_path)) {
       auto ext = entry.path().filename().extension().string();
       if (ext == "hpp" || ext == "h") {
-        std::filesystem::copy(entry.path(), lib_file_path, opt);
+        std::filesystem::copy(entry.path(), current_lib_path, opt);
       }
     }
   }
 }
 
-void yacppm::ISL_Getter::header_isl(std::string lib_file_path) {
-  if (std::filesystem::exists(lib_file_path + "/single_include")) {
-    libs_include_paths.push_back(lib_file_path + "/single_include");
-  } else if (std::filesystem::exists(lib_file_path + "/include")) {
-    libs_include_paths.push_back(lib_file_path + "/include");
+void yacppm::ISL_Getter::header_isl() {
+  if (std::filesystem::exists(current_lib_path + "/single_include")) {
+    libs_include_paths.push_back(current_lib_path + "/single_include");
+  } else if (std::filesystem::exists(current_lib_path + "/include")) {
+    libs_include_paths.push_back(current_lib_path + "/include");
   } else {
-    libs_include_paths.push_back(lib_file_path);
+    libs_include_paths.push_back(current_lib_path);
   }
 }
-void yacppm::ISL_Getter::cmake_isl(std::string lib_file_path) {
-  std::string include_file_path = lib_file_path + "/include";
-  auto libs = find_libs(lib_file_path);
+void yacppm::ISL_Getter::cmake_isl() {
+  std::string include_file_path = current_lib_path + "/include";
+  auto libs = find_libs(current_lib_path);
   std::vector<std::string> lib_names = clean_lib_names(libs);
 
-  libs_paths.push_back(lib_file_path);
+  libs_paths.push_back(current_lib_path);
   for (const auto &lib : lib_names) {
     libs_names.push_back(lib);
   }
 
   if (std::filesystem::exists(include_file_path)) {
-    libs_include_paths.push_back(lib_file_path + "/include");
+    libs_include_paths.push_back(current_lib_path + "/include");
   }
+}
+
+void yacppm::ISL_Getter::copy_license() {
+  static const auto possible_name = {"LICENSE", "COPYING"};
+  std::for_each(possible_name.begin(), possible_name.end(), [&](const std::string &s) {
+    if (std::filesystem::exists(current_git_path + "/" + s)) {
+      std::filesystem::copy_file(current_git_path + "/" + s, current_lib_path + "/LICENSE",
+                                 std::filesystem::copy_options::overwrite_existing);
+      licenses.push_back(current_lib_path + "/LICENSE");
+    }
+  });
 }
