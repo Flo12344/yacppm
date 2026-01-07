@@ -1,4 +1,4 @@
 var version = 5.5
 cmake https://github.com/raysan5/raylib.git {version}
 
-target.windows.libs winmm
+target windows libs winmm
