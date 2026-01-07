@@ -86,11 +86,13 @@ void yacppm::Builder::build() {
   }
   if (std::filesystem::exists("build/THIRDPARTY_LICENSES")) {
     if (std::filesystem::exists("build/" + Constant::get_current_os() + "/bin"))
-      std::filesystem::copy("build/THIRDPARTY_LICENSES", "build/" + Constant::get_current_os() + "/bin",
+      std::filesystem::copy("build/THIRDPARTY_LICENSES",
+                            "build/" + Constant::get_current_os() + "/bin/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
     else
       std::filesystem::copy("build/THIRDPARTY_LICENSES",
-                            "build/" + Constant::get_current_os() + (is_release ? "Release" : "Debug"),
+                            "build/" + Constant::get_current_os() + (is_release ? "Release" : "Debug") +
+                                "/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
   }
 

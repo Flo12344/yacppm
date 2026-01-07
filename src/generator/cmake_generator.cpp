@@ -108,7 +108,7 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
                                std::filesystem::copy_options::overwrite_existing);
     return;
   }
-  std::fstream license_file("THIRDPARTY_LICENSES", std::ios::out);
+  std::fstream license_file("build/THIRDPARTY_LICENSES", std::ios::out);
   for (const auto &l : isl.licenses) {
     std::ifstream lf(l);
     std::string line;
