@@ -17,6 +17,11 @@
 #include <windows.h>
 #define POPEN _popen
 #define PCLOSE _pclose
+#elif defined(__APPLE__)
+#include <limits.h>
+#include <mach-o/dyld.h>
+#define POPEN popen
+#define PCLOSE pclose
 #elif defined __linux__
 #include <limits.h>
 #include <unistd.h>
@@ -64,11 +69,16 @@ inline std::string get_bin_path() {
   char _path[MAX_PATH] = {0};
   GetModuleFileName(NULL, _path, MAX_PATH);
   path = std::string(_path);
-  std::replace(path.begin(), path.end(), '\\', '/');
-
+#elif defined(__APPLE__)
+  char _path[PATH_MAX];
+  uint32_t size = sizeof(_path);
+  if (_NSGetExecutablePath(_path, &size) == 0) {
+    path = std::string(_path);
+  }
 #elif defined __linux__
   path = std::filesystem::canonical("/proc/self/exe");
 #endif
+  std::replace(path.begin(), path.end(), '\\', '/');
   if (path.find_last_of('/') != std::string::npos) {
     path = path.substr(0, path.find_last_of('/'));
   }
