@@ -150,10 +150,12 @@ std::string yacppm::CmakeGenerator::get_windows_args(const std::string &architec
     out << "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ ";
     out << "-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres ";
+    out << "-DDLLTOOL=x86_64-w64-mingw32-dlltool ";
   } else if (architecture == "i386" || architecture == "x32") {
     out << "-DCMAKE_C_COMPILER=i686-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ ";
     out << "-DCMAKE_RC_COMPILER=i686-w64-mingw32-windres ";
+    out << "-DDLLTOOL=i686-w64-mingw32-dlltool ";
   } else {
     throw std::invalid_argument(fmt::format("Unsupported architecture for Windows target: {}\n", architecture));
   }
