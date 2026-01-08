@@ -21,7 +21,7 @@ version = 'v3.4.0'
 [package]
 name = 'yacppm'
 type = 'exec'
-version = '0.1.7'
+version = '0.1.8'
 
     [package.settings]
     cpp = '20'

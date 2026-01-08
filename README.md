@@ -33,6 +33,7 @@ I'm making it mainly to experiment with automating build setup and also to simpl
 - [ ] Finish command impl
 - [ ] Add auto lib type check
 - [ ] Make all options useable through cli
+- [ ] Add post-build action through Lua scripts
 
 
 ## Current Commands
