@@ -9,7 +9,7 @@
 namespace yacppm {
 class Constant {
 public:
-  enum class OS { WINDOWS, LINUX, UNKNOWN };
+  enum class OS { WINDOWS, LINUX, MACOS, UNKNOWN };
   enum class ARCH { X86_64, I386, UNKNOWN };
 
   static OS get_enum_os(const std::string &value) {
@@ -17,6 +17,8 @@ public:
       return OS::WINDOWS;
     } else if (value == "linux") {
       return OS::LINUX;
+    } else if (value == "macos") {
+      return OS::MACOS;
     } else {
       return OS::UNKNOWN;
     }
@@ -44,6 +46,8 @@ public:
   static std::string get_current_os() {
 #if defined(_WIN32)
     return "windows";
+#elif defined(__APPLE__)
+    return "macos";
 #elif defined(__linux__)
     return "linux";
 #else
