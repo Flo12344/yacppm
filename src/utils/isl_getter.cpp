@@ -213,7 +213,7 @@ void yacppm::ISL_Getter::retrieve_deps() {
     auto rep = git::get_user_repo(dep.second.git);
     current_repo_key = rep->first + "/" + rep->second;
 
-    if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" + rep->second)) {
+    if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" + rep->second) || Builder::instance().clean) {
       git::Repository repo;
       git_clone(&repo.ptr, dep.second.git.c_str(), (cache_dir + "/git/" + rep->first + "_" + rep->second).c_str(),
                 &clone_opts);
@@ -266,7 +266,7 @@ void yacppm::ISL_Getter::build_deps() {
     current_git_path = git_file_path;
     current_lib_path = lib_file_path;
     copy_license();
-    if (!already_built && !Builder::instance().clean)
+    if (!already_built || Builder::instance().clean)
       switch (pkg_type(dep.second.type)) {
       case CMAKE: {
         build_cmake();
