@@ -28,4 +28,9 @@ version = '0.1.8'
 
 [target.windows]
 cross_libs = [ 'ws2_32', 'winhttp', 'rpcrt4', 'crypt32' ]
+
+[target.'windows.x86_64']
 cross_libs_path = [ '/usr/x86_64-w64-mingw32/lib/' ]
+
+[target.'windows.i386']
+cross_libs_path = [ '/usr/i386-w64-mingw32/lib/' ]
