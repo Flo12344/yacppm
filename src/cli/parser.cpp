@@ -6,6 +6,7 @@
 #include "commands/run.hpp"
 #include "commands/set.hpp"
 #include "commands/symlink.hpp"
+#include "core/builder.hpp"
 #include "utils/constant.hpp"
 #include "utils/logger.hpp"
 #include <optional>
@@ -42,47 +43,51 @@ void yacppm::Parser::check_command() {
     if (check(false)) {
       if (check(false, "Release")) {
         consume();
-        is_release = true;
+        Builder::instance().is_release = true;
       } else if (check(false, "Debug")) {
         consume();
       } else {
         throw std::invalid_argument(fmt::format("Unknown argument {}", consume()->name));
       }
     }
-    run(is_release);
+
+    while (pos < args.size()) {
+      if (check(true, "clean")) {
+        Builder::instance().clean = true;
+        consume();
+      }
+    }
+
+    run();
     return;
   }
   if (check(false, "build")) {
     consume();
 
-    bool is_release = false;
     if (check(false)) {
       if (check(false, "Release")) {
         consume();
-        is_release = true;
+        Builder::instance().is_release = true;
       } else if (check(false, "Debug")) {
         consume();
       } else {
         throw std::invalid_argument(fmt::format("Unknown argument {}", consume()->name));
       }
     }
-    std::string target = Constant::get_current_os();
-    std::string arch = Constant::get_current_arch();
-    bool is_clean = false;
 
     while (pos < args.size()) {
       if (check(true, "target")) {
-        target = consume()->value;
+        Builder::instance().target = consume()->value;
       }
       if (check(true, "arch")) {
-        arch = consume()->value;
+        Builder::instance().arch = consume()->value;
       }
       if (check(true, "clean")) {
-        is_clean = true;
+        Builder::instance().clean = true;
         consume();
       }
     }
-    build(is_release, is_clean, target, arch);
+    build();
     return;
   }
   if (check(false, "add")) {

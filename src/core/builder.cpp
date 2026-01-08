@@ -49,7 +49,7 @@ void yacppm::Builder::build() {
 
   static const std::regex error(R"(: error( [A-Z0-9]+)?:)");
   static const std::regex warning(R"(: warning( [A-Z0-9]+)?:)");
-  static const std::regex file(R"(([a-zA-Z0-9./\-\(\)\\]+)(\([0-9]+\)|:[0-9]+:))");
+  static const std::regex file(R"(([a-zA-Z0-9./\-\(\)\\\_]+)(\([0-9]+\)|:[0-9]+:))");
   static bool error_found = false;
   std::for_each(other.begin(), other.end(), [](const std::string &s) {
     std::smatch m;
@@ -79,27 +79,25 @@ void yacppm::Builder::build() {
     return;
   }
 
-  if (std::filesystem::exists("build/" + Constant::get_current_os() + "/compile_commands.json")) {
+  if (std::filesystem::exists("build/" + target + "/compile_commands.json")) {
     std::filesystem::copy_options opt = std::filesystem::copy_options::overwrite_existing;
-    std::filesystem::copy_file("build/" + Constant::get_current_os() + "/compile_commands.json",
-                               "compile_commands.json", opt);
+    std::filesystem::copy_file("build/" + target + "/compile_commands.json", "compile_commands.json", opt);
   }
   if (std::filesystem::exists("build/THIRDPARTY_LICENSES")) {
-    if (std::filesystem::exists("build/" + Constant::get_current_os() + "/bin"))
-      std::filesystem::copy("build/THIRDPARTY_LICENSES",
-                            "build/" + Constant::get_current_os() + "/bin/THIRDPARTY_LICENSES",
+    if (std::filesystem::exists("build/" + target + "/bin"))
+      std::filesystem::copy("build/THIRDPARTY_LICENSES", "build/" + target + "/bin/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
     else
       std::filesystem::copy("build/THIRDPARTY_LICENSES",
-                            "build/" + Constant::get_current_os() + (is_release ? "Release" : "Debug") +
-                                "/THIRDPARTY_LICENSES",
+                            "build/" + target + "/bin/" + (is_release ? "Release" : "Debug") + "/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
   }
 
   Loggger::info("Built {} Successfully\n", Manifest::instance().get_info().name);
+  build_success = true;
 }
 
-void yacppm::Builder::setup(std::string target, std::string arch, bool is_release, bool clean) {
+void yacppm::Builder::setup() {
 
   if (target != Constant::get_current_os()) {
     if (target == "windows") {
@@ -110,11 +108,6 @@ void yacppm::Builder::setup(std::string target, std::string arch, bool is_releas
   } else {
     std::filesystem::remove("toolchain.cmake");
   }
-  this->is_release = is_release;
-  this->target = target;
-  this->arch = arch;
-  this->clean = clean;
-
   CmakeGenerator::gen_build_cmake();
 }
 

@@ -103,9 +103,11 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
 
   cmake_file.close();
 
+  if (!std::filesystem::exists("build"))
+    std::filesystem::create_directory("build");
   if (isl.licenses.size() == 1) {
-    std::filesystem::copy_file(isl.licenses[0], "build/THIRDPARTY_LICENSES",
-                               std::filesystem::copy_options::overwrite_existing);
+    std::filesystem::copy(isl.licenses[0], "build/THIRDPARTY_LICENSES",
+                          std::filesystem::copy_options::overwrite_existing);
     return;
   }
   std::fstream license_file("build/THIRDPARTY_LICENSES", std::ios::out);

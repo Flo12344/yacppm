@@ -10,28 +10,28 @@
 #include <toml++/toml.hpp>
 namespace yacppm {
 
-inline void build(bool is_release, bool clean, std::string target = "", std::string arch = "") {
+inline void build() {
   if (!std::filesystem::exists("yacppm.toml")) {
     throw std::runtime_error("Failed, not in a yacppm Project");
   }
 
-  if (target.empty()) {
-    target = Constant::get_current_os();
+  if (Builder::instance().target.empty()) {
+    Builder::instance().target = Constant::get_current_os();
   }
-  if (arch.empty()) {
-    arch = Constant::get_current_arch();
+  if (Builder::instance().arch.empty()) {
+    Builder::instance().arch = Constant::get_current_arch();
   }
 
-  if (Constant::get_enum_os(target) == Constant::OS::UNKNOWN) {
-    throw std::invalid_argument(fmt::format("Invalid OS target {}", target));
+  if (Constant::get_enum_os(Builder::instance().target) == Constant::OS::UNKNOWN) {
+    throw std::invalid_argument(fmt::format("Invalid OS target {}", Builder::instance().target));
   }
-  if (Constant::get_enum_arch(arch) == Constant::ARCH::UNKNOWN) {
-    throw std::invalid_argument(fmt::format("Invalid architecture target {}", target));
+  if (Constant::get_enum_arch(Builder::instance().arch) == Constant::ARCH::UNKNOWN) {
+    throw std::invalid_argument(fmt::format("Invalid architecture target {}", Builder::instance().target));
   }
 
   Manifest::instance().parse(toml::parse_file("yacppm.toml"));
 
-  Builder::instance().setup(target, arch, is_release, clean);
+  Builder::instance().setup();
   Builder::instance().build();
 
   std::filesystem::copy_options opt =

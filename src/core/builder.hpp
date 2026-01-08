@@ -13,12 +13,14 @@ public:
     return inst;
   }
 
-  void setup(std::string target, std::string arch, bool is_release, bool clean);
+  void setup();
   void build();
 
   std::string target = "";
   std::string arch = "";
   bool is_release = false;
   bool clean = false;
+
+  bool build_success = false;
 };
 } // namespace yacppm

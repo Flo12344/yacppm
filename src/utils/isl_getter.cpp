@@ -6,6 +6,7 @@
 #include "utils/command_helper.hpp"
 #include "utils/git_utils.hpp"
 #include "utils/link_utils.hpp"
+#include "utils/logger.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <filesystem>
@@ -46,23 +47,33 @@ void yacppm::ISL_Getter::parse_src_folder(const std::string &path) {
   }
 }
 
+void parse_build_folder(const std::string &path, std::vector<std::string> &libs) {
+  const std::vector<std::string> lib_exts = {".dll", ".so", ".a", ".lib"};
+  for (const auto &entry : std::filesystem::directory_iterator(path)) {
+    if (entry.is_regular_file()) {
+      std::string ext = entry.path().extension().string();
+      for (const auto &lib_ext : lib_exts) {
+        if (ext == lib_ext)
+          libs.push_back(entry.path().string());
+      }
+    } else if (entry.is_directory()) {
+      std::string fname = entry.path().filename().string();
+      if (fname == (Builder::instance().is_release ? "Release" : "Debug") || fname == "bin") {
+        parse_build_folder(entry.path().string(), libs);
+      }
+    }
+  }
+}
+
 std::vector<std::string> yacppm::ISL_Getter::find_libs(const std::string &path) {
   std::vector<std::string> libs;
-  const std::vector<std::string> lib_exts = {".dll", ".so", ".a", ".lib"};
 
   std::string _path = path;
   if (auto tmp = path + "/" + ::to_camel_case(path); std::filesystem::exists(tmp))
     _path = tmp;
 
-  for (const auto &entry : std::filesystem::directory_iterator(_path)) {
-    if (entry.is_regular_file()) {
-      std::string ext = entry.path().extension().string();
-      for (const auto &lib_ext : lib_exts) {
-        if (ext == lib_ext)
-          libs.push_back(entry.path().filename().string());
-      }
-    }
-  }
+  parse_build_folder(_path, libs);
+
   return libs;
 }
 std::vector<std::string> yacppm::ISL_Getter::clean_lib_names(const std::vector<std::string> &libs) {
@@ -70,10 +81,11 @@ std::vector<std::string> yacppm::ISL_Getter::clean_lib_names(const std::vector<s
 
   for (const auto &lib : libs) {
     std::string name = lib;
+    std::replace(name.begin(), name.end(), '\\', '/');
+    size_t last_slash = name.find_last_of("/") + 1;
+    name = name.substr(last_slash);
     size_t ext_pos = name.find_last_of(".");
-    if (ext_pos != std::string::npos) {
-      name = name.substr(0, ext_pos);
-    }
+    name = name.substr(0, ext_pos);
 
     if (name.size() >= 3 && name.starts_with("lib")) {
       name = name.substr(3);
@@ -121,12 +133,14 @@ void yacppm::ISL_Getter::create_bars() {
   main_status = barkeep::Status({
       .show = false,
   });
-  auto lib_build_bar = barkeep::ProgressBar(&global_progress, {
-                                                                  .total = deps.size(),
-                                                                  .speed = std::nullopt,
-                                                                  .style = barkeep::ProgressBarStyle::Rich,
-                                                                  .show = false,
-                                                              });
+  auto lib_build_bar =
+      barkeep::ProgressBar(&global_progress, {
+                                                 .total = deps.size(),
+                                                 .format = " {cyan}{percent:.2f}%{reset} {bar} {value}/{total}",
+                                                 .speed = std::nullopt,
+                                                 .style = barkeep::ProgressBarStyle::Rich,
+                                                 .show = false,
+                                             });
 
   for (auto &dep : deps) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
@@ -315,7 +329,7 @@ void yacppm::ISL_Getter::build_cmake() {
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
   for (const auto &lib : libs) {
-    std::filesystem::copy(current_git_path + "/build/" + lib, current_lib_path, opt);
+    std::filesystem::copy(lib, current_lib_path, opt);
   }
 
   std::string include_file_path = current_git_path + "/include";
@@ -334,7 +348,7 @@ void yacppm::ISL_Getter::build_cmake() {
     }
 
     for (const auto &lib : libs) {
-      std::filesystem::copy(_path + "/" + lib, current_lib_path, opt);
+      std::filesystem::copy(lib, current_lib_path, opt);
     }
   }
 
@@ -395,8 +409,8 @@ void yacppm::ISL_Getter::copy_license() {
   static const auto possible_name = {"LICENSE", "COPYING"};
   std::for_each(possible_name.begin(), possible_name.end(), [&](const std::string &s) {
     if (std::filesystem::exists(current_git_path + "/" + s)) {
-      std::filesystem::copy_file(current_git_path + "/" + s, current_lib_path + "/LICENSE",
-                                 std::filesystem::copy_options::overwrite_existing);
+      std::filesystem::copy(current_git_path + "/" + s, current_lib_path + "/LICENSE",
+                            std::filesystem::copy_options::overwrite_existing);
       licenses.push_back(current_lib_path + "/LICENSE");
     }
   });
