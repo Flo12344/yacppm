@@ -13,7 +13,7 @@
 
 void yacppm::Builder::build() {
   int progress = 0;
-  std::string cmd = "cmake -S . -B build/" + target + " ";
+  std::string cmd = "cmake -S . -B build/" + build_dir_name + " ";
   if (target != Constant::get_current_os()) {
     cmd += "-DCMAKE_TOOLCHAIN_FILE=toolchain.cmake";
   }
@@ -43,7 +43,7 @@ void yacppm::Builder::build() {
     }
   };
 
-  cmd = "cmake --build build/" + target + " 2>&1";
+  cmd = "cmake --build build/" + build_dir_name + " 2>&1";
   run_command(cmd, process);
   global_bar->done();
 
@@ -79,17 +79,18 @@ void yacppm::Builder::build() {
     return;
   }
 
-  if (std::filesystem::exists("build/" + target + "/compile_commands.json")) {
+  if (std::filesystem::exists("build/" + build_dir_name + "/compile_commands.json")) {
     std::filesystem::copy_options opt = std::filesystem::copy_options::overwrite_existing;
-    std::filesystem::copy_file("build/" + target + "/compile_commands.json", "compile_commands.json", opt);
+    std::filesystem::copy_file("build/" + build_dir_name + "/compile_commands.json", "compile_commands.json", opt);
   }
   if (std::filesystem::exists("build/THIRDPARTY_LICENSES")) {
-    if (std::filesystem::exists("build/" + target + "/bin"))
-      std::filesystem::copy("build/THIRDPARTY_LICENSES", "build/" + target + "/bin/THIRDPARTY_LICENSES",
+    if (std::filesystem::exists("build/" + build_dir_name + "/bin"))
+      std::filesystem::copy("build/THIRDPARTY_LICENSES", "build/" + build_dir_name + "/bin/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
     else
       std::filesystem::copy("build/THIRDPARTY_LICENSES",
-                            "build/" + target + "/bin/" + (is_release ? "Release" : "Debug") + "/THIRDPARTY_LICENSES",
+                            "build/" + build_dir_name + "/bin/" + (is_release ? "Release" : "Debug") +
+                                "/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
   }
 
@@ -100,7 +101,7 @@ void yacppm::Builder::build() {
 void yacppm::Builder::setup() {
 
   if (target != Constant::get_current_os()) {
-    if (target == "windows") {
+    if (target == Constant::OS::WINDOWS) {
       CmakeGenerator::gen_windows_toolchain(arch);
     } else if (target != Constant::get_current_os()) {
       throw std::invalid_argument("Unsupported target");
@@ -108,12 +109,14 @@ void yacppm::Builder::setup() {
   } else {
     std::filesystem::remove("toolchain.cmake");
   }
+  build_dir_name = Constant::get_str_os(target) + "_" + Constant::get_str_arch(arch);
   CmakeGenerator::gen_build_cmake();
 }
 
 std::string yacppm::Builder::get_build_hash() {
   std::ostringstream key;
-  key << target << "+" << arch << "+" << (is_release ? "Release" : "Debug");
+  key << Constant::get_str_os(target) << "+" << Constant::get_str_arch(arch) << "+"
+      << (is_release ? "Release" : "Debug");
   for (const auto &[k, v] : Manifest::instance().get_info().settings) {
     key << "+" << k << "=" << v;
   }

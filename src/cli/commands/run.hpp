@@ -16,12 +16,12 @@ inline void run() {
 
   auto process = [](const std::string &s) { Loggger::info("{}", s); };
   std::string cmd;
-  if (std::filesystem::exists("build/" + Constant::get_current_os() + "/bin/" +
+  if (std::filesystem::exists("build/" + Builder::instance().build_dir_name + "/bin/" +
                               (Builder::instance().is_release ? "Release" : "Debug")))
-    cmd = "cd build/" + Constant::get_current_os() + "/bin/" + (Builder::instance().is_release ? "Release" : "Debug") +
-          " && " + Manifest::instance().get_info().name;
+    cmd = "cd build/" + Builder::instance().build_dir_name + "/bin/" +
+          (Builder::instance().is_release ? "Release" : "Debug") + " && " + Manifest::instance().get_info().name;
   else
-    cmd = "cd build/" + Constant::get_current_os() + "/bin/ && ./" + Manifest::instance().get_info().name;
+    cmd = "cd build/" + Builder::instance().build_dir_name + "/bin/ && ./" + Manifest::instance().get_info().name;
   run_command(cmd, process);
 }
 } // namespace yacppm

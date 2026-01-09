@@ -18,8 +18,8 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   isl.get_project_isl();
 
   Package package = Manifest::instance().get_info();
-  std::string target = Builder::instance().target;
-  std::string extended_target = target + "." + Builder::instance().arch;
+  std::string target = Constant::get_str_os(Builder::instance().target);
+  std::string extended_target = target + "." + Constant::get_str_arch(Builder::instance().arch);
 
   std::fstream cmake_file("CMakeLists.txt", std::ios::out);
 
@@ -122,19 +122,19 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   license_file.close();
 }
 
-void yacppm::CmakeGenerator::gen_windows_toolchain(const std::string &architecture) {
+void yacppm::CmakeGenerator::gen_windows_toolchain(Constant::ARCH arch) {
   std::ofstream toolchain_file("toolchain.cmake");
   toolchain_file << "set(CMAKE_SYSTEM_NAME Windows)\n";
-  if (architecture == "x86_64" || architecture == "x64") {
+  if (arch == Constant::ARCH::X86_64) {
     toolchain_file << "set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)\n";
     toolchain_file << "set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)\n";
     toolchain_file << "set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)\n";
-  } else if (architecture == "i386" || architecture == "x32") {
+  } else if (arch == Constant::ARCH::I386) {
     toolchain_file << "set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)\n";
     toolchain_file << "set(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)\n";
     toolchain_file << "set(CMAKE_RC_COMPILER i686-w64-mingw32-windres)\n";
   } else {
-    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows target: {}\n", architecture));
+    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows\n"));
   }
   toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)\n";
   toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)\n";
@@ -143,21 +143,21 @@ void yacppm::CmakeGenerator::gen_windows_toolchain(const std::string &architectu
                     "-static-libgcc -static\")\n";
   toolchain_file.close();
 }
-std::string yacppm::CmakeGenerator::get_windows_args(const std::string &architecture) {
+std::string yacppm::CmakeGenerator::get_windows_args(Constant::ARCH arch) {
   std::ostringstream out;
   out << "-DCMAKE_SYSTEM_NAME=Windows ";
-  if (architecture == "x86_64" || architecture == "x64") {
+  if (arch == Constant::ARCH::X86_64) {
     out << "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ ";
     out << "-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres ";
     out << "-DDLLTOOL=x86_64-w64-mingw32-dlltool ";
-  } else if (architecture == "i386" || architecture == "x32") {
+  } else if (arch == Constant::ARCH::I386) {
     out << "-DCMAKE_C_COMPILER=i686-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ ";
     out << "-DCMAKE_RC_COMPILER=i686-w64-mingw32-windres ";
     out << "-DDLLTOOL=i686-w64-mingw32-dlltool ";
   } else {
-    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows target: {}\n", architecture));
+    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows\n"));
   }
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY ";

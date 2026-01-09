@@ -75,12 +75,15 @@ void yacppm::Parser::check_command() {
       }
     }
 
+    Builder::instance().target = Constant::get_current_os();
+    Builder::instance().arch = Constant::get_current_arch();
+
     while (pos < args.size()) {
       if (check(true, "target")) {
-        Builder::instance().target = consume()->value;
+        Builder::instance().target = Constant::get_enum_os(consume()->value);
       }
       if (check(true, "arch")) {
-        Builder::instance().arch = consume()->value;
+        Builder::instance().arch = Constant::get_enum_arch(consume()->value);
       }
       if (check(true, "clean")) {
         Builder::instance().clean = true;

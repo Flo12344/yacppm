@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/constant.hpp"
 #include <fmt/base.h>
 #include <fstream>
 #include <ios>
@@ -10,7 +11,7 @@ namespace yacppm {
 class CmakeGenerator {
 public:
   static void gen_build_cmake();
-  static void gen_windows_toolchain(const std::string &architecture);
-  static std::string get_windows_args(const std::string &architecture);
+  static void gen_windows_toolchain(Constant::ARCH arch);
+  static std::string get_windows_args(Constant::ARCH arch);
 };
 } // namespace yacppm

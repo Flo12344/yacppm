@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/constant.hpp"
 #include <string>
 namespace yacppm {
 class Builder {
@@ -16,8 +17,9 @@ public:
   void setup();
   void build();
 
-  std::string target = "";
-  std::string arch = "";
+  Constant::OS target = Constant::OS::UNKNOWN;
+  Constant::ARCH arch = Constant::ARCH::UNKNOWN;
+  std::string build_dir_name;
   bool is_release = false;
   bool clean = false;
 

@@ -4,6 +4,7 @@
 #include "core/manifest.hpp"
 #include "generator/cmake_generator.hpp"
 #include "utils/command_helper.hpp"
+#include "utils/constant.hpp"
 #include "utils/git_utils.hpp"
 #include "utils/link_utils.hpp"
 #include "utils/logger.hpp"
@@ -296,7 +297,7 @@ void yacppm::ISL_Getter::build_cmake() {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
     }
     if (Constant::get_current_os() != Builder::instance().target) {
-      if (Constant::get_current_os() == "linux" && Builder::instance().target == "windows") {
+      if (Builder::instance().target == Constant::OS::WINDOWS) {
         cmd += CmakeGenerator::get_windows_args(Builder::instance().arch);
       } else {
         throw std::invalid_argument("Currently not supported");

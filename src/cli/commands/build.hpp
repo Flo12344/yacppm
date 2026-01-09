@@ -15,18 +15,11 @@ inline void build() {
     throw std::runtime_error("Failed, not in a yacppm Project");
   }
 
-  if (Builder::instance().target.empty()) {
-    Builder::instance().target = Constant::get_current_os();
+  if (Builder::instance().target == Constant::OS::UNKNOWN) {
+    std::invalid_argument("Unknown target");
   }
-  if (Builder::instance().arch.empty()) {
-    Builder::instance().arch = Constant::get_current_arch();
-  }
-
-  if (Constant::get_enum_os(Builder::instance().target) == Constant::OS::UNKNOWN) {
-    throw std::invalid_argument(fmt::format("Invalid OS target {}", Builder::instance().target));
-  }
-  if (Constant::get_enum_arch(Builder::instance().arch) == Constant::ARCH::UNKNOWN) {
-    throw std::invalid_argument(fmt::format("Invalid architecture target {}", Builder::instance().target));
+  if (Builder::instance().arch == Constant::ARCH::UNKNOWN) {
+    std::invalid_argument("Unknown arch");
   }
 
   Manifest::instance().parse(toml::parse_file("yacppm.toml"));
