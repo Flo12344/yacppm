@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <fmt/base.h>
 #include <fmt/color.h>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -42,6 +43,11 @@ public:
 #else
     fmt::print(fmt::fg(fmt::color::white) | fmt::emphasis::bold, fmt::runtime(msg), std::forward<T>(args)...);
 #endif
+  }
+
+  static void log_to_file(std::string s) {
+    static std::ofstream file("log.log");
+    file << s;
   }
 
   template <typename... T>
