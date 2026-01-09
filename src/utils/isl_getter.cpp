@@ -266,7 +266,6 @@ void yacppm::ISL_Getter::build_deps() {
     current_repo = rep->second;
     current_git_path = git_file_path;
     current_lib_path = lib_file_path;
-    copy_license();
     if (!already_built || Builder::instance().clean)
       switch (pkg_type(dep.second.type)) {
       case CMAKE: {
@@ -283,6 +282,7 @@ void yacppm::ISL_Getter::build_deps() {
       auto key = rep->first + "/" + rep->second;
       bars_progress[key] = 100;
     }
+    copy_license();
 
     global_progress++;
   }
@@ -296,22 +296,25 @@ void yacppm::ISL_Getter::build_cmake() {
     if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
     }
-    if (Constant::get_current_os() != Builder::instance().target) {
-      if (Builder::instance().target == Constant::OS::WINDOWS) {
-        cmd += CmakeGenerator::get_windows_args(Builder::instance().arch);
-      } else {
-        throw std::invalid_argument("Currently not supported");
-      }
-      // WARN: will be needed when adding lib options
-      // if (Manifest::instance().get_deps()[current_repo].settings.contains("cross_libs")) {
-      // }
-    }
-    cmd += "2>&1";
-    run_command(cmd, nullptr);
 
-    cmd = "cmake --build " + current_git_path + "/build 2>&1";
+    cmd += CmakeGenerator::get_cmd_args();
+    // WARN: will be needed when adding lib options
+    // if
+    // (Manifest::instance().get_deps()[current_repo].settings.contains("cross_libs"))
+    // {
+    // }
+    // WARN: will be needed when adding lib options
+    // if (Manifest::instance().get_deps()[current_repo].settings.contains("libs")) {
+    // }
+
+    cmd += "2>&1";
+    Loggger::log_to_file(current_repo + " config");
+    run_command(cmd);
+
+    cmd = "cmake --build " + current_git_path + "/build ";
     static const std::regex percentage(R"(\[ {0,2}[0-9]{1,3}%\])");
 
+    Loggger::log_to_file(current_repo + " build");
     auto process = [&](std::string sbuf) {
       std::smatch m;
       if (sbuf.starts_with("--")) {
@@ -321,6 +324,12 @@ void yacppm::ISL_Getter::build_cmake() {
       } else {
       }
     };
+
+    const auto processor_count = std::thread::hardware_concurrency();
+    if (processor_count != 0) {
+      cmd += fmt::format("-j{} ", processor_count - 1);
+    }
+    cmd += "2>&1";
     run_command(cmd, process);
   } else {
     throw std::invalid_argument(fmt::format("Unable to find CMakeLists.txt for : {}", current_repo));

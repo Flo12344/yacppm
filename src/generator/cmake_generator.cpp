@@ -1,6 +1,7 @@
 #include "cmake_generator.hpp"
 #include "core/builder.hpp"
 #include "core/manifest.hpp"
+#include "fmt/format.h"
 #include "utils/command_helper.hpp"
 #include "utils/constant.hpp"
 #include "utils/isl_getter.hpp"
@@ -10,6 +11,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <vector>
 
 void yacppm::CmakeGenerator::gen_build_cmake() {
   ISL_Getter isl;
@@ -19,7 +22,8 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
 
   Package package = Manifest::instance().get_info();
   std::string target = Constant::get_str_os(Builder::instance().target);
-  std::string extended_target = target + "." + Constant::get_str_arch(Builder::instance().arch);
+  std::string extended_target = Builder::instance().build_dir_name;
+  Loggger::log_to_file(extended_target + "\n");
 
   std::fstream cmake_file("CMakeLists.txt", std::ios::out);
 
@@ -33,10 +37,7 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
 
   cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
   cmake_file << "project(" << package.name << " LANGUAGES C CXX)\n";
-  // cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
   cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
-  cmake_file << "if(DEFINED CMAKE_TOOLCHAIN_FILE)\n";
-  cmake_file << " include(${CMAKE_TOOLCHAIN_FILE})\n endif()\n";
 
   if (Builder::instance().is_release) {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Release\")\n";
@@ -122,47 +123,98 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   license_file.close();
 }
 
-void yacppm::CmakeGenerator::gen_windows_toolchain(Constant::ARCH arch) {
-  std::ofstream toolchain_file("toolchain.cmake");
-  toolchain_file << "set(CMAKE_SYSTEM_NAME Windows)\n";
-  if (arch == Constant::ARCH::X86_64) {
-    toolchain_file << "set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)\n";
-    toolchain_file << "set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)\n";
-    toolchain_file << "set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)\n";
-  } else if (arch == Constant::ARCH::I386) {
-    toolchain_file << "set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)\n";
-    toolchain_file << "set(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)\n";
-    toolchain_file << "set(CMAKE_RC_COMPILER i686-w64-mingw32-windres)\n";
-  } else {
-    throw std::invalid_argument(fmt::format("Unsupported architecture for Windows\n"));
-  }
-  toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)\n";
-  toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)\n";
-  toolchain_file << "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)\n";
-  toolchain_file << "set(CMAKE_EXE_LINKER_FLAGS \"-static-libstdc++ "
-                    "-static-libgcc -static\")\n";
-  toolchain_file.close();
-}
 std::string yacppm::CmakeGenerator::get_windows_args(Constant::ARCH arch) {
   std::ostringstream out;
   out << "-DCMAKE_SYSTEM_NAME=Windows ";
   if (arch == Constant::ARCH::X86_64) {
+    throw_if_missing({"x86_64-w64-mingw32-gcc", "x86_64-w64-mingw32-g++", "x86_64-w64-mingw32-windres",
+                      "x86_64-w64-mingw32-dlltool"});
     out << "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ ";
     out << "-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres ";
     out << "-DDLLTOOL=x86_64-w64-mingw32-dlltool ";
-  } else if (arch == Constant::ARCH::I386) {
+    out << "-DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 ";
+  } else if (arch == Constant::ARCH::I686) {
+    throw_if_missing(
+        {"i686-w64-mingw32-gcc", "i686-w64-mingw32-g++", "i686-w64-mingw32-windres", "i686-w64-mingw32-dlltool"});
     out << "-DCMAKE_C_COMPILER=i686-w64-mingw32-gcc ";
     out << "-DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ ";
     out << "-DCMAKE_RC_COMPILER=i686-w64-mingw32-windres ";
     out << "-DDLLTOOL=i686-w64-mingw32-dlltool ";
+    out << "-DCMAKE_FIND_ROOT_PATH=/usr/i686-w64-mingw32 ";
   } else {
     throw std::invalid_argument(fmt::format("Unsupported architecture for Windows\n"));
   }
+  out << "-DBUILD_SHARED_LIBS=OFF ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY ";
   out << "-DCMAKE_EXE_LINKER_FLAGS=\"-static-libstdc++ "
          "-static-libgcc -static\" ";
   return out.str();
+}
+std::string yacppm::CmakeGenerator::get_linux_args(Constant::ARCH arch) {
+  auto s_arch = Constant::get_str_arch(arch);
+  auto gnu = arch == Constant::ARCH::ARM ? "gnueabi" : "gnu";
+  std::ostringstream out;
+  out << "-DCMAKE_SYSTEM_NAME=Linux ";
+  if (arch == Constant::ARCH::I686 && Constant::get_current_arch() == Constant::ARCH::X86_64) {
+    throw_if_missing(std::vector<std::string>{"gcc", "g++"});
+    out << "-DCMAKE_SYSTEM_PROCESSOR=i686 ";
+    out << "-DCMAKE_C_COMPILER=gcc ";
+    out << "-DCMAKE_CXX_COMPILER=g++ ";
+    out << "-DCMAKE_C_FLAGS=-m32 ";
+    out << "-DCMAKE_CXX_FLAGS=-m32 ";
+    out << "-DCMAKE_EXE_LINKER_FLAGS=-m32 ";
+    out << "-DCMAKE_EXE_LINKER_FLAGS=-m32 ";
+  } else if (arch == Constant::ARCH::I686) {
+    throw_if_missing(std::vector<std::string>{"gcc-i686-linux-gnu", "g++-i686-linux-gnu"});
+    out << "-DCMAKE_SYSTEM_PROCESSOR=i686 ";
+    out << "-DCMAKE_C_COMPILER=gcc-i686-linux-gnu ";
+    out << "-DCMAKE_CXX_COMPILER=g++-i686-linux-gnu ";
+  } else if (arch != Constant::ARCH::UNKNOWN) {
+    auto c1 = s_arch + "-linux-" + gnu + "-gcc";
+    auto c2 = "gcc-" + s_arch + "-linux-" + gnu;
+    auto cxx1 = s_arch + "-linux-" + gnu + "-g++";
+    auto cxx2 = "g++-" + s_arch + "-linux-" + gnu;
+    throw_if_both_missing({{c1, c2}, {cxx1, cxx2}});
+    out << "-DCMAKE_SYSTEM_PROCESSOR=" << s_arch << " ";
+    out << "-DCMAKE_C_COMPILER=";
+    out << (has_program(c1) ? c1 : c2) << " ";
+    out << "-DCMAKE_CXX_COMPILER=";
+    out << (has_program(cxx1) ? cxx1 : cxx2) << " ";
+  } else {
+    throw std::invalid_argument(fmt::format("Unsupported architecture for Linux\n"));
+  }
+  out << "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER ";
+  out << "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY ";
+  out << "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY ";
+  return out.str();
+}
+std::string yacppm::CmakeGenerator::get_cmd_args() {
+  std::string out{};
+  auto current_os = Constant::get_current_os();
+  auto current_arch = Constant::get_current_arch();
+  auto target = Builder::instance().target;
+  auto arch = Builder::instance().arch;
+  if (target != current_os) {
+    if (target == Constant::OS::WINDOWS) {
+      out = CmakeGenerator::get_windows_args(arch);
+    } else if (target == Constant::OS::LINUX && target != Constant::OS::WINDOWS) {
+      out = CmakeGenerator::get_linux_args(arch);
+    } else {
+      throw std::invalid_argument("Unsupported target");
+    }
+
+  } else if (arch != current_arch) {
+    if (target == Constant::OS::WINDOWS) {
+      out = CmakeGenerator::get_windows_args(arch);
+    } else if (target == Constant::OS::LINUX || target == Constant::OS::MACOS /*Not sure if it'll work*/) {
+      out = CmakeGenerator::get_linux_args(arch);
+    } else {
+      throw std::invalid_argument("Unsupported target");
+    }
+  }
+
+  return out;
 }

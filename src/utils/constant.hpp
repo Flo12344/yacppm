@@ -11,7 +11,7 @@ namespace yacppm {
 class Constant {
 public:
   enum class OS { WINDOWS, LINUX, MACOS, UNKNOWN };
-  enum class ARCH { X86_64, I386, AARCH64, ARM, RISCV, UNKNOWN };
+  enum class ARCH { X86_64, I686, AARCH64, ARM, RISCV, UNKNOWN };
 
   static OS get_enum_os(const std::string &value) {
     if (value == "windows") {
@@ -27,8 +27,8 @@ public:
   static ARCH get_enum_arch(const std::string &value) {
     if (value == "x86_64" || value == "x64") {
       return ARCH::X86_64;
-    } else if (value == "x32" || value == "i386") {
-      return ARCH::I386;
+    } else if (value == "x32" || value == "x86" || value == "i386" || value == "i686") {
+      return ARCH::I686;
     } else if (value == "aarch64" || value == "arm64") {
       return ARCH::AARCH64;
     } else if (value == "arm" || value == "arm32") {
@@ -57,14 +57,14 @@ public:
     switch (value) {
     case ARCH::X86_64:
       return "x86_64";
-    case ARCH::I386:
-      return "i386";
+    case ARCH::I686:
+      return "i686";
     case ARCH::AARCH64:
       return "aarch64";
     case ARCH::ARM:
       return "arm";
     case ARCH::RISCV:
-      return "riscv";
+      return "riscv64";
     case ARCH::UNKNOWN:
       throw std::invalid_argument("UNKNOWN ARCH");
     }
@@ -75,7 +75,7 @@ public:
 #if defined(__x86_64__) || defined(_M_X64)
     return ARCH::X86_64;
 #elif defined(__i386__) || defined(_M_IX86)
-    return ARCH::I386;
+    return ARCH::I686;
 #elif defined(__arm__) || defined(_M_ARM)
     return ARCH::ARM;
 #elif defined(__aarch64__)

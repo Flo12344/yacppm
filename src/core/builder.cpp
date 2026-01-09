@@ -14,9 +14,8 @@
 void yacppm::Builder::build() {
   int progress = 0;
   std::string cmd = "cmake -S . -B build/" + build_dir_name + " ";
-  if (target != Constant::get_current_os()) {
-    cmd += "-DCMAKE_TOOLCHAIN_FILE=toolchain.cmake";
-  }
+
+  cmd += CmakeGenerator::get_cmd_args();
 
   cmd += " 2>&1";
   run_command(cmd);
@@ -43,7 +42,12 @@ void yacppm::Builder::build() {
     }
   };
 
-  cmd = "cmake --build build/" + build_dir_name + " 2>&1";
+  cmd = "cmake --build build/" + build_dir_name;
+  const auto processor_count = std::thread::hardware_concurrency();
+  if (processor_count != 0) {
+    cmd += fmt::format(" -j{} ", processor_count - 1);
+  }
+  cmd += " 2>&1";
   run_command(cmd, process);
   global_bar->done();
 
@@ -100,15 +104,6 @@ void yacppm::Builder::build() {
 
 void yacppm::Builder::setup() {
 
-  if (target != Constant::get_current_os()) {
-    if (target == Constant::OS::WINDOWS) {
-      CmakeGenerator::gen_windows_toolchain(arch);
-    } else if (target != Constant::get_current_os()) {
-      throw std::invalid_argument("Unsupported target");
-    }
-  } else {
-    std::filesystem::remove("toolchain.cmake");
-  }
   build_dir_name = Constant::get_str_os(target) + "_" + Constant::get_str_arch(arch);
   CmakeGenerator::gen_build_cmake();
 }
