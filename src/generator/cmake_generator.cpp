@@ -36,6 +36,7 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   cmake_file << "cmake_minimum_required(VERSION 3.18)\n";
   cmake_file << "project(" << package.name << " LANGUAGES C CXX)\n";
   cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
+  cmake_file << "SET(CMAKE_LIBRARY_PATH ${PROJECT_BINARY_DIR}/bin ${CMAKE_LIBRARY_PATH})\n";
 
   if (Builder::instance().is_release) {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Release\")\n";
@@ -95,7 +96,9 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
     cmake_file << "add_library(${PROJECT_NAME} STATIC ${SOURCES})\n";
   cmake_file << "target_compile_definitions(${PROJECT_NAME} PUBLIC VERSION=\"" << package.version << "\")\n";
   cmake_file << "include_directories(${PROJECT_NAME} PRIVATE ${INCLUDES})\n";
-  cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})";
+  cmake_file << "target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})\n";
+  cmake_file << "set_target_properties(${PROJECT_NAME} PROPERTIES \nBUILD_WITH_INSTALL_RPATH FALSE \nLINK_FLAGS "
+                "\"-Wl,-rpath,$ORIGIN/\")\n";
 
   cmake_file.close();
 
