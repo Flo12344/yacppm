@@ -85,10 +85,11 @@ std::vector<std::string> yacppm::ISL_Getter::clean_lib_names(const std::vector<s
     std::replace(name.begin(), name.end(), '\\', '/');
     size_t last_slash = name.find_last_of("/") + 1;
     name = name.substr(last_slash);
+
     size_t ext_pos = name.find_last_of(".");
     name = name.substr(0, ext_pos);
 
-    if (name.size() >= 3 && name.starts_with("lib")) {
+    if (name.size() >= 3 && name.starts_with("lib") && name.find(".") == std::string::npos) {
       name = name.substr(3);
     }
     if (std::find(cleaned.begin(), cleaned.end(), name) == cleaned.end())
@@ -295,9 +296,12 @@ void yacppm::ISL_Getter::build_cmake() {
     std::string cmd = "cmake -S " + current_git_path + "/ -B " + current_git_path + "/build ";
     if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
+      cmd += "-DCMAKE_CXX_STANDARD_REQUIRED=ON ";
+      cmd += "-DCMAKE_CXX_EXTENSIONS=OFF ";
     }
 
     cmd += CmakeGenerator::get_cmd_args();
+    cmd += CmakeGenerator::parse_settings_for(Manifest::instance().get_deps()[current_repo].settings, true);
     // WARN: will be needed when adding lib options
     // if
     // (Manifest::instance().get_deps()[current_repo].settings.contains("cross_libs"))
@@ -403,6 +407,14 @@ void yacppm::ISL_Getter::header_isl() {
 void yacppm::ISL_Getter::cmake_isl() {
   std::string include_file_path = current_lib_path + "/include";
   auto libs = find_libs(current_lib_path);
+  // remove .dll to the .dll.a
+  for (int i{}; i < libs.size(); i++) {
+    if (libs[i].ends_with(".dll.a")) {
+      auto renamed = libs[i].substr(0, libs[i].size() - 6) + ".a";
+      std::filesystem::rename(libs[i], renamed);
+      libs[i] = renamed;
+    }
+  }
   std::vector<std::string> lib_names = clean_lib_names(libs);
 
   libs_paths.push_back(current_lib_path);

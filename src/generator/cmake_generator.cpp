@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 void yacppm::CmakeGenerator::gen_build_cmake() {
@@ -45,11 +46,8 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Debug\")\n";
   }
 
-  if (package.settings.contains("cpp")) {
-    cmake_file << "set(CMAKE_CXX_STANDARD " << package.settings.at("cpp") << ")\n";
-    cmake_file << "set(CMAKE_CXX_STANDARD_REQUIRED ON)\n";
-    cmake_file << "set(CMAKE_CXX_EXTENSIONS OFF)\n";
-  }
+  cmake_file << parse_settings_for(package.settings, false);
+
   cmake_file << "set(INCLUDES\n";
   cmake_file << "src/\n";
   for (const auto &inc : isl.libs_include_paths) {
@@ -145,7 +143,6 @@ std::string yacppm::CmakeGenerator::get_windows_args(Constant::ARCH arch) {
   } else {
     throw std::invalid_argument(fmt::format("Unsupported architecture for Windows\n"));
   }
-  out << "-DBUILD_SHARED_LIBS=OFF ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY ";
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY ";
@@ -217,4 +214,31 @@ std::string yacppm::CmakeGenerator::get_cmd_args() {
   }
 
   return out;
+}
+
+const std::unordered_map<std::string, std::string> cmake_file_settings_map = {
+    {"cpp", "set(CMAKE_CXX_STANDARD {})\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\nset(CMAKE_CXX_EXTENSIONS OFF)\n"},
+    {"linking", "set(BUILD_SHARED_LIBS {})\n"},
+};
+
+const std::unordered_map<std::string, std::string> cmake_cmd_settings_map = {
+    {"linking", "-DBUILD_SHARED_LIBS={}"},
+};
+
+std::string yacppm::CmakeGenerator::parse_settings_for(const std::unordered_map<std::string, std::string> &settings,
+                                                       bool is_cmd) {
+  std::ostringstream out;
+
+  for (const auto &s : is_cmd ? cmake_cmd_settings_map : cmake_file_settings_map) {
+    if (settings.contains(s.first)) {
+      if (s.first == "linking")
+        out << fmt::format(fmt::runtime(s.second), settings.at(s.first) == "static" ? "OFF" : "ON");
+      else
+        out << fmt::format(fmt::runtime(s.second), settings.at(s.first));
+      if (is_cmd)
+        out << " ";
+    }
+  }
+
+  return out.str();
 }
