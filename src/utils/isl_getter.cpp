@@ -378,19 +378,18 @@ void yacppm::ISL_Getter::build_cmake() {
 void yacppm::ISL_Getter::build_header() {
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;
+  const std::vector<std::string> possible_path = {"/single_include", "/include", "/" + current_repo};
 
-  if (std::filesystem::exists(current_git_path + "/single_include")) {
-    std::filesystem::copy(current_git_path + "/single_include", current_lib_path, opt);
-  } else if (std::filesystem::exists(current_git_path + "/include")) {
-    std::filesystem::copy(current_git_path + "/include", current_lib_path, opt);
-  } else if (std::filesystem::exists(current_git_path + "/" + current_repo)) {
-    std::filesystem::copy(current_git_path + "/" + current_repo, current_lib_path, opt);
-  } else {
-    for (const auto &entry : std::filesystem::directory_iterator(current_git_path)) {
-      auto ext = entry.path().filename().extension().string();
-      if (ext == "hpp" || ext == "h") {
-        std::filesystem::copy(entry.path(), current_lib_path, opt);
-      }
+  for (const auto &p : possible_path) {
+    if (std::filesystem::exists(current_git_path + p)) {
+      std::filesystem::copy(current_git_path + p, current_lib_path, opt);
+      return;
+    }
+  }
+  for (const auto &entry : std::filesystem::directory_iterator(current_git_path)) {
+    auto ext = entry.path().filename().extension().string();
+    if (ext == "hpp" || ext == "h") {
+      std::filesystem::copy(entry.path(), current_lib_path, opt);
     }
   }
 }
@@ -413,6 +412,9 @@ void yacppm::ISL_Getter::cmake_isl() {
       auto renamed = libs[i].substr(0, libs[i].size() - 6) + ".a";
       std::filesystem::rename(libs[i], renamed);
       libs[i] = renamed;
+    }
+    if (libs[i].ends_with(".dll") || libs[i].ends_with(".so")) {
+      libs_to_copy.push_back(libs[i]);
     }
   }
   std::vector<std::string> lib_names = clean_lib_names(libs);

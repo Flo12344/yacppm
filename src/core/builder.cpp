@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <regex>
 #include <sstream>
+#include <string>
 #include <vector>
 
 void yacppm::Builder::build() {
@@ -87,14 +88,25 @@ void yacppm::Builder::build() {
     std::filesystem::copy_options opt = std::filesystem::copy_options::overwrite_existing;
     std::filesystem::copy_file("build/" + build_dir_name + "/compile_commands.json", "compile_commands.json", opt);
   }
-  if (std::filesystem::exists("build/THIRDPARTY_LICENSES")) {
+
+  std::string combined_license = "build/THIRDPARTY_LICENSES";
+  if (std::filesystem::exists(combined_license)) {
     if (std::filesystem::exists("build/" + build_dir_name + "/bin"))
-      std::filesystem::copy("build/THIRDPARTY_LICENSES", "build/" + build_dir_name + "/bin/THIRDPARTY_LICENSES",
+      std::filesystem::copy(combined_license, "build/" + build_dir_name + "/bin/THIRDPARTY_LICENSES",
                             std::filesystem::copy_options::overwrite_existing);
     else
-      std::filesystem::copy("build/THIRDPARTY_LICENSES",
+      std::filesystem::copy(combined_license,
                             "build/" + build_dir_name + "/bin/" + (is_release ? "Release" : "Debug") +
                                 "/THIRDPARTY_LICENSES",
+                            std::filesystem::copy_options::overwrite_existing);
+  }
+
+  for (const auto &lib : isl.libs_to_copy) {
+    if (std::filesystem::exists("build/" + build_dir_name + "/bin"))
+      std::filesystem::copy(lib, "build/" + build_dir_name + "/bin/",
+                            std::filesystem::copy_options::overwrite_existing);
+    else
+      std::filesystem::copy(lib, "build/" + build_dir_name + "/bin/" + (is_release ? "Release" : "Debug") + "/",
                             std::filesystem::copy_options::overwrite_existing);
   }
 
@@ -103,8 +115,10 @@ void yacppm::Builder::build() {
 }
 
 void yacppm::Builder::setup() {
-
   build_dir_name = Constant::get_str_os(target) + "_" + Constant::get_str_arch(arch);
+  isl.retrieve_deps();
+  isl.build_deps();
+  isl.get_project_isl();
   CmakeGenerator::gen_build_cmake();
 }
 

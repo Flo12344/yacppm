@@ -40,6 +40,7 @@ public:
   void get_project_isl();
 
 public:
+  std::vector<std::string> libs_to_copy;
   std::vector<std::string> libs_paths;
   std::vector<std::string> libs_names;
   std::vector<std::string> libs_include_paths;

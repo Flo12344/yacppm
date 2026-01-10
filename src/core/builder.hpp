@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/constant.hpp"
+#include "utils/isl_getter.hpp"
 #include <string>
 namespace yacppm {
 class Builder {
@@ -24,5 +25,6 @@ public:
   bool clean = false;
 
   bool build_success = false;
+  ISL_Getter isl;
 };
 } // namespace yacppm

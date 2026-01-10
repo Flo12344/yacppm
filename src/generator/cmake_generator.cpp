@@ -16,10 +16,7 @@
 #include <vector>
 
 void yacppm::CmakeGenerator::gen_build_cmake() {
-  ISL_Getter isl;
-  isl.retrieve_deps();
-  isl.build_deps();
-  isl.get_project_isl();
+  ISL_Getter isl = Builder::instance().isl;
 
   Package package = Manifest::instance().get_info();
   std::string target = Constant::get_str_os(Builder::instance().target);
