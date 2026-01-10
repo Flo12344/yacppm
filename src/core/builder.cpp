@@ -122,11 +122,14 @@ void yacppm::Builder::setup() {
   CmakeGenerator::gen_build_cmake();
 }
 
-std::string yacppm::Builder::get_build_hash() {
+std::string yacppm::Builder::get_build_hash(const std::string &repo) {
   std::ostringstream key;
   key << Constant::get_str_os(target) << "+" << Constant::get_str_arch(arch) << "+"
       << (is_release ? "Release" : "Debug");
   for (const auto &[k, v] : Manifest::instance().get_info().settings) {
+    key << "+" << k << "=" << v;
+  }
+  for (const auto &[k, v] : Manifest::instance().get_deps()[repo].settings) {
     key << "+" << k << "=" << v;
   }
 

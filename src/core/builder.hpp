@@ -7,7 +7,7 @@ namespace yacppm {
 class Builder {
 public:
   // used for dependency build dir name
-  std::string get_build_hash();
+  std::string get_build_hash(const std::string &repo);
 
 public:
   static Builder &instance() {

@@ -52,9 +52,9 @@ void parse_build_folder(const std::string &path, std::vector<std::string> &libs)
   const std::vector<std::string> lib_exts = {".dll", ".so", ".a", ".lib"};
   for (const auto &entry : std::filesystem::directory_iterator(path)) {
     if (entry.is_regular_file()) {
-      std::string ext = entry.path().extension().string();
+      std::string ext = entry.path().filename().string();
       for (const auto &lib_ext : lib_exts) {
-        if (ext == lib_ext)
+        if (ext.find(lib_ext) != std::string::npos)
           libs.push_back(entry.path().string());
       }
     } else if (entry.is_directory()) {
@@ -111,7 +111,7 @@ void yacppm::ISL_Getter::get_project_isl() {
     }
     auto rep = git::get_user_repo(dep.second.git);
     std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
-                                Builder::instance().get_build_hash();
+                                Builder::instance().get_build_hash(rep->second);
 
     current_lib_path = lib_file_path;
     switch (pkg_type(dep.second.type)) {
@@ -251,7 +251,7 @@ void yacppm::ISL_Getter::build_deps() {
     current_repo_key = rep->first + "/" + rep->second;
     std::string git_file_path = cache_dir + "/git/" + rep->first + "_" + rep->second;
     std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
-                                Builder::instance().get_build_hash();
+                                Builder::instance().get_build_hash(rep->second);
     if (!std::filesystem::exists(git_file_path)) {
       continue;
     }
@@ -289,6 +289,11 @@ void yacppm::ISL_Getter::build_deps() {
   }
   main_status->message("Deps Built");
   main_status->done();
+
+  bars.clear();
+  main_comp.reset();
+  bars_comp.reset();
+  main_status.reset();
 }
 
 void yacppm::ISL_Getter::build_cmake() {
@@ -413,7 +418,7 @@ void yacppm::ISL_Getter::cmake_isl() {
       std::filesystem::rename(libs[i], renamed);
       libs[i] = renamed;
     }
-    if (libs[i].ends_with(".dll") || libs[i].ends_with(".so")) {
+    if (libs[i].ends_with(".dll") || libs[i].find(".so") != std::string::npos) {
       libs_to_copy.push_back(libs[i]);
     }
   }
