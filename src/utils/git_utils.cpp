@@ -183,6 +183,7 @@ build/
 .cache/
 compile_commands.json
 CmakeFiles.txt
+*.log
 )";
   out.close();
   git_libgit2_shutdown();
