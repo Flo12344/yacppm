@@ -6,7 +6,7 @@
 
 int main(int arg_count, char *argv[]) {
   try {
-    // yacppm::throw_if_missing("cmake");
+    yacppm::throw_if_missing("cmake");
     yacppm::Parser parser{};
     parser.parse_cli_args(arg_count, argv);
   } catch (const std::exception &e) {

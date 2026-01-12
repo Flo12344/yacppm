@@ -16,13 +16,7 @@ public:
   std::unordered_map<std::string, std::string> get_all_build_hash();
 
 public:
-  Builder() {
-
-    Logger::verbose("test");
-    manifest = Manifest();
-
-    Logger::verbose("test");
-  }
+  Builder() { manifest = Manifest(); }
 
   void setup();
   void build();
