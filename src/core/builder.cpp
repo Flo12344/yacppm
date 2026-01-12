@@ -95,12 +95,12 @@ void yacppm::Builder::build() {
   std::string combined_license = "build/THIRDPARTY_LICENSES";
   if (std::filesystem::exists(combined_license)) {
     if (std::filesystem::exists("build/" + settings.build_dir_name + "/bin"))
-      std::filesystem::copy(combined_license, "build/" + settings.build_dir_name + "/bin/THIRDPARTY_LICENSES",
+      std::filesystem::copy(combined_license, "build/" + settings.build_dir_name + "/bin/",
                             std::filesystem::copy_options::overwrite_existing);
     else
       std::filesystem::copy(combined_license,
                             "build/" + settings.build_dir_name + "/bin/" + (settings.is_release ? "Release" : "Debug") +
-                                "/THIRDPARTY_LICENSES",
+                                "/",
                             std::filesystem::copy_options::overwrite_existing);
   }
 
