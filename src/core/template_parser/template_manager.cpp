@@ -2,6 +2,7 @@
 #include "core/manifest.hpp"
 #include "utils/logger.hpp"
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -116,41 +117,39 @@ void yacppm::TemplateManager::parse(const std::string &path) {
 void yacppm::TemplateManager::print_variables(const std::string &path) {
   parse(path);
   for (const auto &var : vtable) {
-    Loggger::info("{} : {}", var.first, (var.second.empty() ? "required" : "optional"));
+    Logger::info("{} : {}", var.first, (var.second.empty() ? "required" : "optional"));
   }
 }
 
-void yacppm::TemplateManager::use_template(const std::string &path,
+void yacppm::TemplateManager::use_template(Manifest &manifest, const std::string &path,
                                            const std::unordered_map<std::string, std::string> &template_settings) {
   vtable = template_settings;
   parse(path);
   check_for_empty_var();
 
-  auto package = Manifest::instance().get_info();
+  auto package = manifest.get_info();
   std::string project_path = package.name + "/";
   for (const auto &lib : libs) {
     auto t = pkg_type(lib.type);
     switch (t) {
     case HEADER:
-      add_header_only(lib.repo, lib.version, project_path);
+      manifest.add_dep(lib.repo, lib.version.empty() ? "latest" : lib.version, "header", {});
       break;
     case CMAKE:
-      add_cmake(lib.repo, lib.version, project_path);
+      manifest.add_dep(lib.repo, lib.version.empty() ? "latest" : lib.version, "cmake", {});
       break;
     case LLIB:
-      add_local_lib(lib.repo, lib.version, project_path);
+      manifest.add_dep(lib.repo, lib.version.empty() ? "latest" : lib.version, "llib", {});
       break;
     case PKG_TYPE_MAX:
       break;
     }
   }
 
-  Manifest::instance().set_targets_options(template_target_option);
+  manifest.set_targets_options(template_target_option);
 
   if (!project_type.empty())
-    Manifest::instance().set_type(project_type);
-
-  Manifest::instance().save(project_path);
+    manifest.set_type(project_type);
 
   std::filesystem::remove(project_path + "template.deps");
 }

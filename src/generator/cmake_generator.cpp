@@ -15,13 +15,10 @@
 #include <unordered_map>
 #include <vector>
 
-void yacppm::CmakeGenerator::gen_build_cmake() {
-  ISL_Getter isl = Builder::instance().isl;
-
-  Package package = Manifest::instance().get_info();
-  std::string target = Constant::get_str_os(Builder::instance().target);
-  std::string extended_target = Builder::instance().build_dir_name;
-  Loggger::log_to_file(extended_target + "\n");
+void yacppm::CmakeGenerator::gen_build_cmake(Package package, const ISL_Getter &isl, const BuildSettings &settings) {
+  std::string target = Constant::get_str_os(settings.target);
+  std::string extended_target = settings.build_dir_name;
+  Logger::log_to_file(extended_target + "\n");
 
   std::fstream cmake_file("CMakeLists.txt", std::ios::out);
 
@@ -38,7 +35,7 @@ void yacppm::CmakeGenerator::gen_build_cmake() {
   cmake_file << "SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n";
   cmake_file << "SET(CMAKE_LIBRARY_PATH ${PROJECT_BINARY_DIR}/bin ${CMAKE_LIBRARY_PATH})\n";
 
-  if (Builder::instance().is_release) {
+  if (settings.is_release) {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Release\")\n";
   } else {
     cmake_file << "set(CMAKE_BUILD_TYPE \"Debug\")\n";
@@ -188,12 +185,10 @@ std::string yacppm::CmakeGenerator::get_linux_args(Constant::ARCH arch) {
   out << "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY ";
   return out.str();
 }
-std::string yacppm::CmakeGenerator::get_cmd_args() {
+std::string yacppm::CmakeGenerator::get_cmd_args(yacppm::Constant::OS target, yacppm::Constant::ARCH arch) {
   std::string out{};
   auto current_os = Constant::get_current_os();
   auto current_arch = Constant::get_current_arch();
-  auto target = Builder::instance().target;
-  auto arch = Builder::instance().arch;
   if (target != current_os) {
     if (target == Constant::OS::WINDOWS) {
       out = CmakeGenerator::get_windows_args(arch);

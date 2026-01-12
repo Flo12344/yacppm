@@ -2,6 +2,6 @@
 
 #include "utils/logger.hpp"
 namespace yacppm {
-inline void version() { Loggger::info("YACPPM version {}", VERSION); }
+inline void version() { Logger::info("YACPPM version {}", VERSION); }
 
 } // namespace yacppm

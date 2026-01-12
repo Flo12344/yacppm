@@ -1,4 +1,6 @@
 #pragma once
+#include "core/manifest.hpp"
+#include "utils/builder_settings.hpp"
 #include "utils/constant.hpp"
 #include <cstddef>
 #include <git2/checkout.h>
@@ -14,12 +16,14 @@
 #include <git2/types.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 namespace yacppm {
 class ISL_Getter {
 
   void parse_src_folder(const std::string &path);
+  void parse_build_folder(const std::string &path, std::vector<std::string> &libs);
 
   std::vector<std::string> find_libs(const std::string &path);
   std::vector<std::string> clean_lib_names(const std::vector<std::string> &libs);
@@ -33,8 +37,12 @@ class ISL_Getter {
 
   void create_bars();
   void reset_bars();
+  void free_bars() {}
 
 public:
+  ISL_Getter() = default;
+  ISL_Getter(Manifest &manifest, std::unordered_map<std::string, std::string> deps_hash, const BuildSettings &settings)
+      : manifest(manifest), deps_hash(deps_hash), build_settings(settings) {};
   void retrieve_deps();
   void build_deps();
   void get_project_isl();
@@ -49,6 +57,10 @@ public:
   std::vector<std::string> licenses;
 
 private:
+  Manifest manifest;
+  std::unordered_map<std::string, std::string> deps_hash;
+  BuildSettings build_settings;
+
   std::string current_repo;
   static inline std::string current_repo_key;
   std::string current_git_path;

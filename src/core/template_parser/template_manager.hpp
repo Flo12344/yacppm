@@ -12,6 +12,7 @@
 #include <vector>
 namespace yacppm {
 
+class Manifest;
 class TemplateManager {
 private:
   struct tmpDeps {
@@ -36,7 +37,8 @@ private:
 
 public:
   void print_variables(const std::string &path);
-  void use_template(const std::string &path, const std::unordered_map<std::string, std::string> &template_settings);
+  void use_template(Manifest &manifest, const std::string &path,
+                    const std::unordered_map<std::string, std::string> &template_settings);
 
 private:
   std::unordered_map<std::string, std::string> vtable;

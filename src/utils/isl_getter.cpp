@@ -48,7 +48,7 @@ void yacppm::ISL_Getter::parse_src_folder(const std::string &path) {
   }
 }
 
-void parse_build_folder(const std::string &path, std::vector<std::string> &libs) {
+void yacppm::ISL_Getter::parse_build_folder(const std::string &path, std::vector<std::string> &libs) {
   const std::vector<std::string> lib_exts = {".dll", ".so", ".a", ".lib"};
   for (const auto &entry : std::filesystem::directory_iterator(path)) {
     if (entry.is_regular_file()) {
@@ -59,7 +59,7 @@ void parse_build_folder(const std::string &path, std::vector<std::string> &libs)
       }
     } else if (entry.is_directory()) {
       std::string fname = entry.path().filename().string();
-      if (fname == (Builder::instance().is_release ? "Release" : "Debug") || fname == "bin") {
+      if (fname == (build_settings.is_release ? "Release" : "Debug") || fname == "bin") {
         parse_build_folder(entry.path().string(), libs);
       }
     }
@@ -103,15 +103,14 @@ void yacppm::ISL_Getter::get_project_isl() {
   parse_src_folder("src/");
 
   std::string cache_dir = get_global_cache_dir();
-  Manifest &m = Manifest::instance();
-  for (auto &dep : m.get_deps()) {
+  for (auto &dep : manifest.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
       local_libs.push_back({dep.first, dep.second.version});
       continue;
     }
     auto rep = git::get_user_repo(dep.second.git);
-    std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
-                                Builder::instance().get_build_hash(rep->second);
+    std::string lib_file_path =
+        cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" + deps_hash[rep->second];
 
     current_lib_path = lib_file_path;
     switch (pkg_type(dep.second.type)) {
@@ -131,7 +130,7 @@ void yacppm::ISL_Getter::get_project_isl() {
 
 void yacppm::ISL_Getter::create_bars() {
   global_progress = 0;
-  auto deps = Manifest::instance().get_deps();
+  auto deps = manifest.get_deps();
   main_status = barkeep::Status({
       .show = false,
   });
@@ -171,7 +170,7 @@ void yacppm::ISL_Getter::create_bars() {
 
 void yacppm::ISL_Getter::reset_bars() {
   global_progress = 0;
-  auto deps = Manifest::instance().get_deps();
+  auto deps = manifest.get_deps();
 
   for (auto &dep : deps) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
@@ -208,14 +207,14 @@ void yacppm::ISL_Getter::retrieve_deps() {
   clone_opts.checkout_opts.progress_cb = checkout_progress;
   clone_opts.fetch_opts.callbacks.transfer_progress = fetch_progress;
 
-  for (auto &dep : Manifest::instance().get_deps()) {
+  for (auto &dep : manifest.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB)
       continue;
 
     auto rep = git::get_user_repo(dep.second.git);
     current_repo_key = rep->first + "/" + rep->second;
 
-    if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" + rep->second) || Builder::instance().clean) {
+    if (!std::filesystem::exists(cache_dir + "/git/" + rep->first + "_" + rep->second) || build_settings.clean) {
       git::Repository repo;
       git_clone(&repo.ptr, dep.second.git.c_str(), (cache_dir + "/git/" + rep->first + "_" + rep->second).c_str(),
                 &clone_opts);
@@ -237,12 +236,11 @@ void yacppm::ISL_Getter::retrieve_deps() {
 
 void yacppm::ISL_Getter::build_deps() {
   std::string cache_dir = get_global_cache_dir();
-  Manifest &m = Manifest::instance();
 
   reset_bars();
   main_status->message("Building deps");
 
-  for (auto &dep : m.get_deps()) {
+  for (auto &dep : manifest.get_deps()) {
     if (dep.second.git.empty() && pkg_type(dep.second.type) == LLIB) {
       local_libs.push_back({dep.first, dep.second.version});
       continue;
@@ -250,8 +248,8 @@ void yacppm::ISL_Getter::build_deps() {
     auto rep = git::get_user_repo(dep.second.git);
     current_repo_key = rep->first + "/" + rep->second;
     std::string git_file_path = cache_dir + "/git/" + rep->first + "_" + rep->second;
-    std::string lib_file_path = cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" +
-                                Builder::instance().get_build_hash(rep->second);
+    std::string lib_file_path =
+        cache_dir + "/libs/" + rep->first + "_" + rep->second + "/" + dep.second.version + "/" + deps_hash[rep->second];
     if (!std::filesystem::exists(git_file_path)) {
       continue;
     }
@@ -267,7 +265,7 @@ void yacppm::ISL_Getter::build_deps() {
     current_repo = rep->second;
     current_git_path = git_file_path;
     current_lib_path = lib_file_path;
-    if (!already_built || Builder::instance().clean)
+    if (!already_built || build_settings.clean)
       switch (pkg_type(dep.second.type)) {
       case CMAKE: {
         build_cmake();
@@ -299,14 +297,14 @@ void yacppm::ISL_Getter::build_deps() {
 void yacppm::ISL_Getter::build_cmake() {
   if (std::filesystem::exists(current_git_path + "/CMakeLists.txt")) {
     std::string cmd = "cmake -S " + current_git_path + "/ -B " + current_git_path + "/build ";
-    if (auto settings = Manifest::instance().get_info().settings; settings.contains("cpp")) {
+    if (auto settings = manifest.get_info().settings; settings.contains("cpp")) {
       cmd += "-DCMAKE_CXX_STANDARD=" + settings["cpp"] + " ";
       cmd += "-DCMAKE_CXX_STANDARD_REQUIRED=ON ";
       cmd += "-DCMAKE_CXX_EXTENSIONS=OFF ";
     }
 
-    cmd += CmakeGenerator::get_cmd_args();
-    cmd += CmakeGenerator::parse_settings_for(Manifest::instance().get_deps()[current_repo].settings, true);
+    cmd += CmakeGenerator::get_cmd_args(build_settings.target, build_settings.arch);
+    cmd += CmakeGenerator::parse_settings_for(manifest.get_deps()[current_repo].settings, true);
     // WARN: will be needed when adding lib options
     // if
     // (Manifest::instance().get_deps()[current_repo].settings.contains("cross_libs"))
@@ -317,13 +315,13 @@ void yacppm::ISL_Getter::build_cmake() {
     // }
 
     cmd += "2>&1";
-    Loggger::log_to_file(current_repo + " config");
+    Logger::log_to_file(current_repo + " config");
     run_command(cmd);
 
     cmd = "cmake --build " + current_git_path + "/build ";
     static const std::regex percentage(R"(\[ {0,2}[0-9]{1,3}%\])");
 
-    Loggger::log_to_file(current_repo + " build");
+    Logger::log_to_file(current_repo + " build");
     auto process = [&](std::string sbuf) {
       std::smatch m;
       if (sbuf.starts_with("--")) {

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "toml++/toml.hpp"
+#include "utils/constant.hpp"
+#include "utils/logger.hpp"
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,16 +27,22 @@ struct Package {
 class Manifest {
 
 public:
-  static Manifest &instance() {
-    static Manifest inst;
-    return inst;
-  }
-  void create(const std::string &project_name);
-  void parse(const toml::table &tbl);
-  void save(const std::string &path);
+  Manifest(const std::string &path = "") {
+    if (std::filesystem::exists("yacppm.toml")) {
+      parse(toml::parse_file("yacppm.toml"));
+    } else if (!path.empty()) {
+      create(path);
+    } else {
+      return;
+    }
 
-  void add_dep(const std::string &repo, const std::string &version, const std::string &type,
-               std::unordered_map<std::string, std::string> settings = {});
+    project_toml_path = path.empty() ? "" : (path + "/") + "yacppm.toml";
+  }
+  ~Manifest() { save(); }
+
+  void create(const std::string &project_name);
+  void save();
+
   void set_settings(std::string name, std::string value);
   void set_type(const std::string &type);
   void add_target_option(const std::string &target, const std::string &name, std::vector<std::string> value) {
@@ -48,12 +57,16 @@ public:
     package.build_extra_options = options;
   }
 
-  Package &get_info() { return package; }
-  std::unordered_map<std::string, Dependency> &get_deps() { return dependencies; }
+  Package get_info() const { return package; }
+  std::unordered_map<std::string, Dependency> get_deps() const { return dependencies; }
+  void add_dep(const std::string &repo, const std::string &version, const std::string &type,
+               std::unordered_map<std::string, std::string> settings = {});
 
 private:
+  void parse(const toml::table &tbl);
   toml::table to_table();
 
+  std::string project_toml_path;
   Package package;
   std::unordered_map<std::string, Dependency> dependencies;
 };

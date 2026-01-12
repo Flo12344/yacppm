@@ -2,6 +2,8 @@
 #include "../utils/link_utils.hpp"
 #include "../utils/logger.hpp"
 #include "fmt/color.h"
+#include "toml++/toml.hpp"
+#include "utils/constant.hpp"
 #include "utils/logger.hpp"
 #include <fstream>
 #include <memory>
@@ -16,7 +18,7 @@ void Manifest::add_dep(const std::string &repo, const std::string &version, cons
 
   if (type == "llib") {
     dependencies.insert_or_assign(repo, Dependency{version, type, "", settings});
-    Loggger::print_indent(2, "Adding", " {} {} to dependencies", repo, version);
+    Logger::print_indent(2, "Adding", " {} {} to dependencies", repo, version);
     return;
   }
   std::string checked = git::get_git_link(repo);
@@ -24,7 +26,7 @@ void Manifest::add_dep(const std::string &repo, const std::string &version, cons
   if (!repo_info) {
     throw std::runtime_error(fmt::format("failed to add: {}", repo));
   }
-  Loggger::print_indent(2, "Adding", " {} {} to dependencies", repo, version);
+  Logger::print_indent(2, "Adding", " {} {} to dependencies", repo, version);
 
   dependencies.insert_or_assign(repo_info->second, Dependency{version, type, checked, settings});
 }
@@ -150,7 +152,10 @@ toml::table Manifest::to_table() {
   return root;
 }
 
-void Manifest::save(const std::string &path) {
-  std::ofstream out(path + (path.empty() ? "" : "/") + "yacppm.toml");
+void Manifest::save() {
+  if (project_toml_path.empty())
+    return;
+  std::ofstream out(project_toml_path);
   out << to_table();
+  out.close();
 }

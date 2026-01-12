@@ -39,7 +39,7 @@ void yacppm::run_command(const std::string &command, std::function<void(std::str
   while (fgets(buf.data(), buf.size(), pipe.get()) != nullptr) {
     std::string sbuf = buf.data();
 
-    Loggger::log_to_file(sbuf);
+    Logger::log_to_file(sbuf);
     if (func)
       func(sbuf);
   }

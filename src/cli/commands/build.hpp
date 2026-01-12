@@ -10,22 +10,20 @@
 #include <toml++/toml.hpp>
 namespace yacppm {
 
-inline void build() {
+inline void build(Builder builder) {
   if (!std::filesystem::exists("yacppm.toml")) {
     throw std::runtime_error("Failed, not in a yacppm Project");
   }
 
-  if (Builder::instance().target == Constant::OS::UNKNOWN) {
+  if (builder.settings.target == Constant::OS::UNKNOWN) {
     std::invalid_argument("Unknown target");
   }
-  if (Builder::instance().arch == Constant::ARCH::UNKNOWN) {
+  if (builder.settings.arch == Constant::ARCH::UNKNOWN) {
     std::invalid_argument("Unknown arch");
   }
 
-  Manifest::instance().parse(toml::parse_file("yacppm.toml"));
-
-  Builder::instance().setup();
-  Builder::instance().build();
+  builder.setup();
+  builder.build();
 
   std::filesystem::copy_options opt =
       std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing;

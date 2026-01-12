@@ -18,9 +18,8 @@ inline void create(std::string name, std::string type, std::string _template,
   std::filesystem::create_directory(name);
   git::init_git_project(name);
 
-  Manifest::instance().create(name);
-  Manifest::instance().set_type(type);
-  Manifest::instance().save(name);
+  auto manifest = Manifest(name);
+  manifest.set_type(type);
 
   std::string template_path = get_bin_path() + "/templates/" + _template;
   if (!std::filesystem::exists(template_path)) {
@@ -32,6 +31,6 @@ inline void create(std::string name, std::string type, std::string _template,
 
   std::filesystem::copy(template_path, name, opt);
   TemplateManager templates;
-  templates.use_template(name + "/template.deps", template_settings);
+  templates.use_template(manifest, name + "/template.deps", template_settings);
 }
 } // namespace yacppm

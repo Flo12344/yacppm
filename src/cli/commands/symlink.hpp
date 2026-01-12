@@ -9,7 +9,7 @@ inline void symlink() {
   switch (os) {
 
   case Constant::OS::WINDOWS:
-    Loggger::info("Add yacppm folder to your PATH");
+    Logger::info("Add yacppm folder to your PATH");
     break;
   case Constant::OS::LINUX:
   case Constant::OS::MACOS:

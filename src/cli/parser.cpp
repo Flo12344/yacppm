@@ -1,18 +1,21 @@
 #include "parser.hpp"
 #include "cli/commands/version.hpp"
-#include "commands/add.hpp"
 #include "commands/build.hpp"
 #include "commands/new.hpp"
 #include "commands/run.hpp"
 #include "commands/set.hpp"
 #include "commands/symlink.hpp"
 #include "core/builder.hpp"
+#include "core/manifest.hpp"
 #include "utils/constant.hpp"
 #include "utils/logger.hpp"
+#include <algorithm>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 void yacppm::Parser::parse_cli_args(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
@@ -36,14 +39,37 @@ void yacppm::Parser::parse_cli_args(int argc, char *argv[]) {
 void yacppm::Parser::check_command() {
   if (args.size() == 0)
     throw std::invalid_argument("Missing command");
+  // TODO: better impl later
+  if (check(false, "help")) {
+    consume();
+    std::vector<std::pair<std::string, std::string>> cmds = {
+        {"help", "Show list of the commands"},
+        {"new <project_name> [-template] [-type]", "Create a project"},
+        {"add -h <repo> [version]", "Add a header only lib to the project"},
+        {"add -c <repo> [version]", "Add a cmake lib to the project"},
+        {"add -llib <repo> [version]", "Add a local lib to the project (NEED WORK)"},
+        {"set -cpp=", "Set c++ standard for the project"},
+        {"build [Release|Debug] [-target] [-arch] [-clean]", "Build the project (Clean rebuild deps)"},
+        {"run [Release|Debug] [-clean]", "Build and Run the project (Clean rebuild deps)"},
+        {"symlink", "On linux make YACPPM usable from anywhere"},
+        {"v", "Show YACPPM version"},
+    };
+    std::for_each(cmds.begin(), cmds.end(), [](std::pair<std::string, std::string> s) {
+      Logger::info("yacppm {:<40} {:>40}\n", s.first, s.second);
+    });
+    return;
+  }
 
   if (check(false, "run")) {
     consume();
+
+    auto builder = Builder();
+
     bool is_release = false;
     if (check(false)) {
       if (check(false, "Release")) {
         consume();
-        Builder::instance().is_release = true;
+        builder.settings.is_release = true;
       } else if (check(false, "Debug")) {
         consume();
       } else {
@@ -53,21 +79,22 @@ void yacppm::Parser::check_command() {
 
     while (pos < args.size()) {
       if (check(true, "clean")) {
-        Builder::instance().clean = true;
+        builder.settings.clean = true;
         consume();
       }
     }
 
-    run();
+    run(builder);
     return;
   }
   if (check(false, "build")) {
     consume();
+    auto builder = Builder();
 
     if (check(false)) {
       if (check(false, "Release")) {
         consume();
-        Builder::instance().is_release = true;
+        builder.settings.is_release = true;
       } else if (check(false, "Debug")) {
         consume();
       } else {
@@ -75,26 +102,27 @@ void yacppm::Parser::check_command() {
       }
     }
 
-    Builder::instance().target = Constant::get_current_os();
-    Builder::instance().arch = Constant::get_current_arch();
+    builder.settings.target = Constant::get_current_os();
+    builder.settings.arch = Constant::get_current_arch();
 
     while (pos < args.size()) {
       if (check(true, "target")) {
-        Builder::instance().target = Constant::get_enum_os(consume()->value);
+        builder.settings.target = Constant::get_enum_os(consume()->value);
       }
       if (check(true, "arch")) {
-        Builder::instance().arch = Constant::get_enum_arch(consume()->value);
+        builder.settings.arch = Constant::get_enum_arch(consume()->value);
       }
       if (check(true, "clean")) {
-        Builder::instance().clean = true;
+        builder.settings.clean = true;
         consume();
       }
     }
-    build();
+    build(builder);
     return;
   }
   if (check(false, "add")) {
     consume();
+    auto manifest = Manifest();
 
     std::string type = expect(true, "", "Repo type").name;
     std::string repo = expect(false, "", "Repo link").name;
@@ -104,16 +132,16 @@ void yacppm::Parser::check_command() {
     }
 
     if (type == "c") {
-      add_cmake(repo, version);
+      manifest.add_dep(repo, version.empty() ? "latest" : version, "cmake", {});
     } else if (type == "h") {
-      add_header_only(repo, version);
+      manifest.add_dep(repo, version.empty() ? "latest" : version, "header", {});
     } else if (type == "llib") {
-      add_local_lib(repo, version);
+      manifest.add_dep(repo, version, "llib", {});
     }
     return;
   }
   if (check(false, "remove")) {
-    Loggger::info(consume()->name + "\n");
+    Logger::info(consume()->name + "\n");
     return;
   }
 

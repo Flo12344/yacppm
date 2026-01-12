@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-class Loggger {
+class Logger {
 public:
   template <typename... T> static void err(std::string err, T &&...args) {
     std::string msg = "[ERROR] " + err;
