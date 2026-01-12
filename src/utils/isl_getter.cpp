@@ -197,10 +197,12 @@ void yacppm::ISL_Getter::retrieve_deps() {
 
   git_libgit2_init();
   auto checkout_progress = [](const char *path, size_t cur, size_t tot, void *payload) {
-    bars_progress[current_repo_key] = cur / (float)tot * 100;
+    if (tot != 0)
+      bars_progress[current_repo_key] = cur / (float)tot * 100;
   };
   auto fetch_progress = [](const git_indexer_progress *stats, void *payload) -> int {
-    bars_progress[current_repo_key] = stats->received_objects / (float)stats->total_objects * 100;
+    if (stats->total_objects != 0)
+      bars_progress[current_repo_key] = stats->received_objects / (float)stats->total_objects * 100;
     return 0;
   };
   git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;

@@ -41,7 +41,8 @@ class ISL_Getter {
 
 public:
   ISL_Getter() = default;
-  ISL_Getter(Manifest &manifest, std::unordered_map<std::string, std::string> deps_hash, const BuildSettings &settings)
+  ISL_Getter(const Manifest &manifest, std::unordered_map<std::string, std::string> deps_hash,
+             const BuildSettings &settings)
       : manifest(manifest), deps_hash(deps_hash), build_settings(settings) {};
   void retrieve_deps();
   void build_deps();

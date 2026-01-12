@@ -84,6 +84,9 @@ void yacppm::Parser::check_command() {
       }
     }
 
+    builder.settings.target = Constant::get_current_os();
+    builder.settings.arch = Constant::get_current_arch();
+
     run(builder);
     return;
   }

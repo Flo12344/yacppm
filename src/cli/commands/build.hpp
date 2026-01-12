@@ -10,7 +10,7 @@
 #include <toml++/toml.hpp>
 namespace yacppm {
 
-inline void build(Builder builder) {
+inline void build(Builder &builder) {
   if (!std::filesystem::exists("yacppm.toml")) {
     throw std::runtime_error("Failed, not in a yacppm Project");
   }

@@ -122,8 +122,10 @@ void yacppm::Builder::setup() {
   settings.build_dir_name = Constant::get_str_os(settings.target) + "_" + Constant::get_str_arch(settings.arch);
 
   isl = ISL_Getter(manifest, get_all_build_hash(), settings);
-  isl.retrieve_deps();
-  isl.build_deps();
+  if (manifest.get_deps().size() != 0) {
+    isl.retrieve_deps();
+    isl.build_deps();
+  }
   isl.get_project_isl();
   CmakeGenerator::gen_build_cmake(manifest.get_info(), isl, settings);
 }
