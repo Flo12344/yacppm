@@ -69,7 +69,7 @@ Remove a dependency from your project.
 ### `yacppm set <option>`
 | option   | Description                     |
 |----------|---------------------------------|
-| `-cpp`     | Header-only library           |
+| `-cpp`     | set cpp version           |
 
 ### Example
 ```bash
