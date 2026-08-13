@@ -30,13 +30,13 @@ public:
   Manifest(const std::string &path = "") {
     if (std::filesystem::exists("yacppm.toml")) {
       parse(toml::parse_file("yacppm.toml"));
+      project_toml_path = "yacppm.toml";
     } else if (!path.empty()) {
       create(path);
+      project_toml_path = (path + "/") + "yacppm.toml";
     } else {
       return;
     }
-
-    project_toml_path = path.empty() ? "" : (path + "/") + "yacppm.toml";
   }
   ~Manifest() { save(); }
 
